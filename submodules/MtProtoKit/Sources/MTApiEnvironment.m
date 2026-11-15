@@ -393,8 +393,8 @@ static NSData *base64_decode(NSString *str) {
         _systemVersion = [[[pInfo operatingSystemVersionString] componentsSeparatedByString:@" "] objectAtIndex:1];
 #endif
         
-NSString *suffix = @"";
 #if TARGET_OS_OSX
+        NSString *suffix = @"";
         NSString *value = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"SOURCE"];
         if (value != nil) {
             suffix = [NSString stringWithFormat:@"%@", value];
