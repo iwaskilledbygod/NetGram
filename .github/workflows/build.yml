@@ -73,13 +73,17 @@ jobs:
           OUTPUT_PATH="build/artifacts"
           rm -rf "$OUTPUT_PATH"
           mkdir -p "$OUTPUT_PATH"
-          for f in bazel-out/applebin_ios-ios_arm*-opt-ST-*/bin/Telegram/Telegram.ipa; do
-            cp "$f" $OUTPUT_PATH/
+          IPA=""
+          for f in bazel-out/applebin_ios-ios_arm*-opt-ST-*/bin/Telegram/Telegram.ipa bazel-bin/Telegram/Telegram.ipa; do
+            if [ -f "$f" ]; then IPA="$f"; break; fi
           done
+          if [ -z "$IPA" ]; then echo "Telegram.ipa not found"; exit 1; fi
+          cp "$IPA" $OUTPUT_PATH/
 
           # collect dsym
           mkdir -p build/DSYMs
-          for f in bazel-out/applebin_ios-ios_arm*-opt-ST-*/bin/Telegram/*.dSYM; do
+          DSYM_SRC=$(dirname "$IPA")
+          for f in "$DSYM_SRC"/*.dSYM; do
             cp -R "$f" build/DSYMs/
           done
           zip -r "./$OUTPUT_PATH/Telegram.DSYMs.zip" build/DSYMs 1>/dev/null
