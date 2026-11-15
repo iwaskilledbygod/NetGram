@@ -402,8 +402,7 @@ NSString *suffix = @"";
 #endif
         
         //SOURCE
-        NSString *versionString = [[NSString alloc] initWithFormat:@"%@ (%@) %@", [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"], [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"], suffix];
-        _appVersion = versionString;
+        _appVersion = @"DEV 0.0.1";
         
         _systemLangCode = [[NSLocale preferredLanguages] objectAtIndex:0];
     #if TARGET_OS_OSX

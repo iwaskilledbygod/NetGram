@@ -481,6 +481,7 @@ official_bundle_ids = [
 
 store_bundle_ids = [
     "ph.telegra.Telegraph",
+    "ios.NetGram.pvpsoldier",
 ]
 
 apple_pay_merchants = official_apple_pay_merchants if telegram_bundle_id == "ph.telegra.Telegraph" else []
