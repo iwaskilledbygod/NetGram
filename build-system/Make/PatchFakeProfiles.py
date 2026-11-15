@@ -4,6 +4,7 @@ import plistlib
 import argparse
 import subprocess
 import tempfile
+from datetime import datetime, timedelta
 
 # Rewrites fake provisioning profiles for a custom bundle_id:
 # decrypts each .mobileprovision, replaces the old bundle id with the
@@ -59,6 +60,11 @@ def main():
             new_plist = plist_bytes.replace(OLD_BUNDLE_ID.encode(), args.bundleId.encode())
             # re-serialize to normalize the plist
             plist_obj = plistlib.loads(new_plist)
+            # extend the expiration date: rules_apple rejects profiles in the past
+            new_expiry = datetime.utcnow().replace(microsecond=0) + timedelta(days=365)
+            plist_obj['ExpirationDate'] = new_expiry
+            if 'CreationDate' in plist_obj:
+                plist_obj['CreationDate'] = datetime.utcnow().replace(microsecond=0)
             normalized = plistlib.dumps(plist_obj, fmt=plistlib.FMT_XML)
 
             signed = run(['openssl', 'smime', '-sign', '-nodetach', '-in', '-', '-signer', signer_path, '-outform', 'DER'], input_bytes=normalized)
