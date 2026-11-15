@@ -26,6 +26,16 @@ jobs:
             xcode-select -p
           fi
 
+      - name: Restore Bazel cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /private/var/tmp/netgram-bazel-cache/disk
+            /private/var/tmp/netgram-bazel-cache/repos
+          key: bazel-${{ runner.os }}-${{ hashFiles('MODULE.bazel.lock', 'versions.json') }}
+          restore-keys: |
+            bazel-${{ runner.os }}-
+
       - name: Create canonical source directory
         run: |
           set -x
@@ -60,6 +70,10 @@ jobs:
           python3 -I build-system/Make/PatchFakeProfiles.py \
             --path build-system/fake-codesigning \
             --bundleId="ios.NetGram.pvpsoldier"
+
+          # route bazel caches to the actions/cache-managed directories
+          echo "build --disk_cache=/private/var/tmp/netgram-bazel-cache/disk" >> .bazelrc
+          echo "build --repository_cache=/private/var/tmp/netgram-bazel-cache/repos" >> .bazelrc
           python3 -u build-system/Make/Make.py \
             --overrideXcodeVersion \
             --bazelUserRoot="$BAZEL_USER_ROOT" \
