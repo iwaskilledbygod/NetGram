@@ -2,12 +2,33 @@ import Foundation
 import UIKit
 import Display
 import AsyncDisplayKit
+import BuildConfig
 import SwiftSignalKit
 import TelegramCore
 import TelegramPresentationData
 import ItemListUI
 import PresentationDataUtils
 import TelegramStringFormatting
+
+// Sessions were previously branded with a hardcoded client name, which
+// mislabeled other apps (official Telegram, other forks) in the session list.
+// Known official api_ids are mapped to their real names; everything else falls
+// back to the generic "Telegram <version>" label.
+private let currentApiId: Int32 = {
+    guard let bundleId = Bundle.main.bundleIdentifier else { return 0 }
+    return BuildConfig(baseAppBundleId: bundleId).apiId
+}()
+
+private func sessionAppName(apiId: Int32) -> String {
+    switch apiId {
+        case 8: return "Telegram iOS"
+        case 6: return "Telegram Desktop"
+        case 2834: return "Telegram macOS"
+        case 2040, 2496: return "Telegram Web"
+        default:
+            return apiId == currentApiId ? "NetGram" : "Telegram"
+    }
+}
 
 struct ItemListRecentSessionItemEditing: Equatable {
     let editable: Bool
@@ -310,7 +331,7 @@ class ItemListRecentSessionItemNode: ItemListRevealOptionsItemNode {
                 updatedIcon = iconForSession(item.session).0
             }
             
-            let appString = "NetGram \(appVersion)"
+            let appString = "\(sessionAppName(apiId: item.session.apiId)) \(appVersion)"
             
             titleAttributedString = NSAttributedString(string: deviceString, font: titleFont, textColor: item.presentationData.theme.list.itemPrimaryTextColor)
             appAttributedString = NSAttributedString(string: appString, font: textFont, textColor: item.presentationData.theme.list.itemPrimaryTextColor)
