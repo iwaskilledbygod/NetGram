@@ -1035,7 +1035,7 @@ if __name__ == '__main__':
     buildParser.add_argument(
         '--buildNumber',
         required=True,
-        type=int,
+        type=str,
         help='Build number.',
         metavar='number'
     )
