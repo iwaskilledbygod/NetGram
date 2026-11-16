@@ -1,9 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [ main ]
-
   workflow_dispatch:
 
 jobs:
@@ -103,6 +100,13 @@ jobs:
             cp -R "$f" build/DSYMs/
           done
           zip -r "./$OUTPUT_PATH/Telegram.DSYMs.zip" build/DSYMs 1>/dev/null
+
+      - name: Validate IPA before release
+        run: |
+          cd /Users/Shared/telegram-ios
+          python3 -I build-system/Make/ValidateIPA.py \
+            build/artifacts/Telegram.ipa \
+            build-system/appstore-configuration.json
 
       - name: Create Release
         id: create_release

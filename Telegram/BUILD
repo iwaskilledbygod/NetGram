@@ -1098,7 +1098,7 @@ swift_library(
 )
 
 plist_fragment(
-    name = "ShareExtensionEntitlements",
+    name = "AppGroupEntitlements",
     extension = "entitlements",
     template = """
 <key>com.apple.security.application-groups</key>
@@ -1110,7 +1110,7 @@ plist_fragment(
 
 ios_extension(
     name = "ShareExtension",
-    entitlements = ":ShareExtensionEntitlements.entitlements",
+    entitlements = ":AppGroupEntitlements.entitlements",
     bundle_id = "{telegram_bundle_id}.Share".format(
         telegram_bundle_id = telegram_bundle_id,
     ),

@@ -691,11 +691,20 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
             networkEngineFactory: RustNetworkEngineFactory()
         )
         
-        guard let appGroupUrl = maybeAppGroupUrl else {
-            self.mainWindow?.presentNative(UIAlertController(title: nil, message: "Error 2", preferredStyle: .alert))
-            return true
+        let appGroupUrl: URL
+        if let provisionedAppGroupUrl = maybeAppGroupUrl {
+            appGroupUrl = provisionedAppGroupUrl
+        } else {
+            // Sideloaded installs signed with a free Apple ID cannot provision
+            // App Groups, so containerURL returns nil here. Fall back to the
+            // app's own container so the app still starts; extensions keep
+            // their existing no-op path when the shared container is missing.
+            let fallbackUrl = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("NetGramAppGroupFallback", isDirectory: true)
+            try? FileManager.default.createDirectory(at: fallbackUrl, withIntermediateDirectories: true, attributes: nil)
+            appGroupUrl = fallbackUrl
         }
-        
+
+
         var isDebugConfiguration = false
         #if DEBUG
         isDebugConfiguration = true
