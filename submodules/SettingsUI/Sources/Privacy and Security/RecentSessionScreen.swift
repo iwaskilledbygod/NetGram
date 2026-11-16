@@ -435,7 +435,7 @@ private final class RecentSessionSheetContent: CombinedComponent {
                 var appVersion = session.appVersion
                 appVersion = appVersion.replacingOccurrences(of: "APPSTORE", with: "").replacingOccurrences(of: "BETA", with: "Beta").trimmingTrailingSpaces()
                 applicationTitle = strings.AuthSessions_View_Application
-                applicationString = "NetGram \(appVersion)"
+                applicationString = "\(sessionAppName(session: session)) \(appVersion)"
                 ipString = nil
                 dateString = nil
                 locationString = session.country

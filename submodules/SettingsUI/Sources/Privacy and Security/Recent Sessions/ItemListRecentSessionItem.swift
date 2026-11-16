@@ -12,22 +12,31 @@ import TelegramStringFormatting
 
 // Sessions were previously branded with a hardcoded client name, which
 // mislabeled other apps (official Telegram, other forks) in the session list.
-// Known official api_ids are mapped to their real names; everything else falls
-// back to the generic "Telegram <version>" label.
-private let currentApiId: Int32 = {
+// The current app's own sessions are labeled NetGram; everything else is
+// identified by the server-reported platform / api_id.
+let currentApiId: Int32 = {
     guard let bundleId = Bundle.main.bundleIdentifier else { return 0 }
     return BuildConfig(baseAppBundleId: bundleId).apiId
 }()
 
-private func sessionAppName(apiId: Int32) -> String {
-    switch apiId {
+func sessionAppName(session: RecentAccountSession) -> String {
+    if session.apiId == currentApiId {
+        return "NetGram"
+    }
+    let platform = session.platform.lowercased()
+    if platform.contains("ios") { return "Telegram iOS" }
+    if platform.contains("android") { return "Telegram Android" }
+    if platform.contains("windows") || platform.contains("linux") || platform.contains("ubuntu") { return "Telegram Desktop" }
+    if platform.contains("mac") { return "Telegram macOS" }
+    if platform.contains("web") { return "Telegram Web" }
+    switch session.apiId {
         case 8: return "Telegram iOS"
         case 6: return "Telegram Desktop"
         case 2834: return "Telegram macOS"
-        case 2040, 2496: return "Telegram Web"
-        default:
-            return apiId == currentApiId ? "NetGram" : "Telegram"
+        default: break
     }
+    if !session.appName.isEmpty { return session.appName }
+    return "Telegram"
 }
 
 struct ItemListRecentSessionItemEditing: Equatable {
@@ -331,7 +340,7 @@ class ItemListRecentSessionItemNode: ItemListRevealOptionsItemNode {
                 updatedIcon = iconForSession(item.session).0
             }
             
-            let appString = "\(sessionAppName(apiId: item.session.apiId)) \(appVersion)"
+            let appString = "\(sessionAppName(session: item.session)) \(appVersion)"
             
             titleAttributedString = NSAttributedString(string: deviceString, font: titleFont, textColor: item.presentationData.theme.list.itemPrimaryTextColor)
             appAttributedString = NSAttributedString(string: appString, font: textFont, textColor: item.presentationData.theme.list.itemPrimaryTextColor)

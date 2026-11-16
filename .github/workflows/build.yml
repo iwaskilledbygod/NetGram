@@ -57,7 +57,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.2"
+          export BUILD_NUMBER="0.0.3"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -120,10 +120,9 @@ jobs:
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Интерфейс: слово «Telegram» заменено на «NetGram» во всех строках приложения.
-            - Сеансы: другие устройства показываются под настоящими именами (Telegram iOS, Telegram Desktop и т.д.), NetGram — как NetGram.
-            - Версия в сеансах и debug-меню теперь «13.2 (0.0.2)» вместо «DEV 0.0.1».
-            - Имя приложения на домашнем экране и в Share-меню — NetGram.
+            - Список сеансов: устройства теперь подписываются настоящими именами приложений — Telegram iOS, Telegram Desktop, Telegram macOS и т.д. Сеанс NetGram подписан как NetGram.
+            - Экран сеанса («Application») показывает то же корректное имя.
+            - Версия сборки: 13.2 (0.0.3) — видна в debug-меню и в сеансах.
           draft: false
           prerelease: false
 
