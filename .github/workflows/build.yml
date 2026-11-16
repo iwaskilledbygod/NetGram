@@ -113,9 +113,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}
-          # Название релиза без номера сборки. Перед запуском сборки обнови
+          # Название: NetGram 13.2 (0.0.3). Перед запуском сборки обнови
           # «Что нового» ниже — только изменения, видимые пользователю.
-          release_name: NetGram ${{ env.APP_VERSION }}
+          release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
