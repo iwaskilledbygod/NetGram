@@ -411,7 +411,7 @@ static NSData *base64_decode(NSString *str) {
             if (shortVersion.length > 0 && bundleVersion.length > 0) {
                 _appVersion = [NSString stringWithFormat:@"%@ (%@)", shortVersion, bundleVersion];
             } else {
-                _appVersion = @"13.2 (0.0.1)";
+                _appVersion = @"13.2 (0.0.2)";
             }
         }
         
