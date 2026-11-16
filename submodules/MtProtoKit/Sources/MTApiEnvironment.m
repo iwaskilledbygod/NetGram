@@ -402,7 +402,18 @@ static NSData *base64_decode(NSString *str) {
 #endif
         
         //SOURCE
-        _appVersion = @"DEV 0.0.1";
+        // Report the real version from Info.plist so sessions show "13.2 (0.0.1)"
+        // instead of the DEV placeholder.
+        {
+            NSDictionary *info = [[NSBundle mainBundle] infoDictionary];
+            NSString *shortVersion = [info objectForKey:@"CFBundleShortVersionString"];
+            NSString *bundleVersion = [info objectForKey:(NSString *)kCFBundleVersionKey];
+            if (shortVersion.length > 0 && bundleVersion.length > 0) {
+                _appVersion = [NSString stringWithFormat:@"%@ (%@)", shortVersion, bundleVersion];
+            } else {
+                _appVersion = @"13.2 (0.0.1)";
+            }
+        }
         
         _systemLangCode = [[NSLocale preferredLanguages] objectAtIndex:0];
     #if TARGET_OS_OSX
