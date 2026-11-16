@@ -1,53 +1,58 @@
 <div align="center">
 
-# ✦ 𝐍 𝐄 𝐓 𝐆 𝐑 𝐀 𝐌 ✦
+# NetGram
 
-### *Telegram, на который влияет общество*
-
-<br>
-
-**Неофициальный клиент Telegram для iOS.**<br>
-Красивый дизайн — прямо как с концептов, которые вы видели на картинках,<br>
-но теперь это работает на вашем телефоне.
+### Официальная сборка Telegram для iOS, развивающаяся волей сообщества
 
 <br>
 
-🎨 **Концепт-дизайн** · 💡 **Идеи от сообщества** · 🤝 **Сила влияния**
+**NetGram** — независимый клиент Telegram для iOS, созданный для тех, кто верит, что программа должна принадлежать своим пользователям. Здесь каждая деталь интерфейса доведена до образа, задуманного в концептах, а каждое решение о развитии принимается вместе с обществом.
 
 <br>
 
-[![Platform](https://img.shields.io/badge/iOS-13.2-blue?style=for-the-badge&logo=apple)](https://github.com/iwaskilledbygod/NetGram)
-[![Community](https://img.shields.io/badge/твой_голос-важен-6c5ce7?style=for-the-badge&logo=telegram)](https://github.com/iwaskilledbygod/NetGram/issues)
-[![Releases](https://img.shields.io/badge/сборки-here-00b894?style=for-the-badge&logo=github)](https://github.com/iwaskilledbygod/NetGram/releases)
+[![iOS](https://img.shields.io/badge/iOS-13.2-informational?style=flat-square&logo=apple)](https://github.com/iwaskilledbygod/NetGram)
+[![Status](https://img.shields.io/badge/статус-активно_развивается-success?style=flat-square)](https://github.com/iwaskilledbygod/NetGram/releases)
+[![License](https://img.shields.io/badge/лицензия-GPL--2.0-blue?style=flat-square)](https://github.com/TelegramMessenger/Telegram-iOS/blob/master/LICENSE)
 
 <br>
 
 ---
 
-### 💡 Как это работает
+<br>
 
-> Ты предлагаешь → сообщество решает → мы делаем
+## Принципы
 
-Открыли issue с идеей · Обсудили · Лучшее попало в приложение
+**I. Дизайн как замысел.** Интерфейс NetGram следует концепт-видению, а не компромиссам массового продукта. Красота здесь — не украшение, а форма уважения к пользователю.
+
+**II. Общество решает.** Ни одна функция не появляется в одиночку. Каждый, кто пользуется NetGram, может предложить идею — и лучшее из предложенного становится частью приложения.
+
+**III. Прозрачность.** Полный исходный код открыт. Любой может убедиться, как устроен NetGram, и собрать его самостоятельно.
 
 <br>
 
-### ✨ Почему NetGram?
+## Как участвовать
 
-| | |
-|---|---|
-| 🎨 | **Дизайн с концептов** — интерфейс такой красивый, каким его рисуют фантазёры |
-| 🗳️ | **Общество решает** — фичи появляются не «сверху», а по запросу снизу |
-| ⚡ | **Всё остальное** — это всё ещё полноценный Telegram |
+1. **Предложите идею** — оформление, функция, поведение интерфейса
+2. **Сообщество обсуждает** — коллективно оценивается польза и соответствие замыслу
+3. **Реализация** — принятые предложения входят в очередную сборку
 
 <br>
 
-### 🚀 Присоединяйся
+## Загрузка
 
-**[Предложить идею](https://github.com/iwaskilledbygod/NetGram/issues)** · **[Сообщить о баге](https://github.com/iwaskilledbygod/NetGram/issues)** · **[Скачать сборку](https://github.com/iwaskilledbygod/NetGram/releases)**
+Подписанные сборки публикуются в разделе [**Releases**](https://github.com/iwaskilledbygod/NetGram/releases).
 
-<br><br>
+<br>
 
-*NetGram — неофициальное приложение, не связанное с Telegram Messenger Inc.*
+---
+
+<br>
+
+### Уведомление
+
+NetGram является неофициальным клиентом и не связан с Telegram Messenger Inc.
+Названия Telegram® и соответствующий товарный знак принадлежат их правообладателям.
+
+© 2026 NetGram. Распространяется под лицензией GPL-2.0.
 
 </div>
