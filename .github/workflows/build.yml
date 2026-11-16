@@ -113,9 +113,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}
-          release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
+          # Название релиза без номера сборки. Перед запуском сборки обнови
+          # «Что нового» ниже — только изменения, видимые пользователю.
+          release_name: NetGram ${{ env.APP_VERSION }}
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
+
+            ## Что нового
+            - Интерфейс: слово «Telegram» заменено на «NetGram» во всех строках приложения.
+            - Сеансы: другие устройства показываются под настоящими именами (Telegram iOS, Telegram Desktop и т.д.), NetGram — как NetGram.
+            - Версия в сеансах и debug-меню теперь «13.2 (0.0.2)» вместо «DEV 0.0.1».
+            - Имя приложения на домашнем экране и в Share-меню — NetGram.
           draft: false
           prerelease: false
 
