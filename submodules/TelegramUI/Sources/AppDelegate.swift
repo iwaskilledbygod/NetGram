@@ -970,6 +970,10 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 }
             })
         }, requestSiriAuthorization: { completion in
+            guard buildConfig.isSiriEnabled else {
+                completion(false)
+                return
+            }
             if #available(iOS 10, *) {
                 INPreferences.requestSiriAuthorization { status in
                     if case .authorized = status {
@@ -3408,7 +3412,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         let _ = (context.sharedContext.accountManager.transaction { transaction in
             let settings = transaction.getSharedData(ApplicationSpecificSharedDataKeys.intentsSettings)?.get(IntentsSettings.self) ?? IntentsSettings.defaultSettings
             if !settings.initiallyReset || settings.account == nil {
-                if #available(iOS 10.0, *) {
+                if #available(iOS 10.0, *), self.buildConfig.isSiriEnabled {
                     Queue.mainQueue().async {
                         INInteraction.deleteAll()
                     }

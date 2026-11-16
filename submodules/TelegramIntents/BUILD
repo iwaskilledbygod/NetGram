@@ -16,6 +16,7 @@ swift_library(
         "//submodules/AccountContext:AccountContext",
         "//submodules/TelegramPresentationData:TelegramPresentationData",
         "//submodules/AvatarNode:AvatarNode",
+        "//submodules/BuildConfig:BuildConfig",
     ],
     visibility = [
         "//visibility:public",

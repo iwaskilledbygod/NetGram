@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import Intents
+import BuildConfig
 import Display
 import TelegramCore
 import SwiftSignalKit
@@ -8,6 +9,15 @@ import TelegramUIPreferences
 import TelegramPresentationData
 import AvatarNode
 import AccountContext
+
+/// The `com.apple.developer.siri` entitlement is not provisioned for re-signed
+/// installs (free Apple ID), and every Intents API raises an Objective-C
+/// exception without it. Donations are skipped entirely when Siri is disabled
+/// in the build configuration.
+private let siriIntentsAvailable: Bool = {
+    guard let bundleId = Bundle.main.bundleIdentifier else { return false }
+    return BuildConfig(baseAppBundleId: bundleId).isSiriEnabled
+}()
 
 private let savedMessagesAvatar: UIImage = {
     return generateImage(CGSize(width: 60.0, height: 60.0), rotatedContext: { size, context in
@@ -55,6 +65,7 @@ public enum SendMessageIntentSubject: CaseIterable {
 }
 
 public func donateSendMessageIntent(account: Account, sharedContext: SharedAccountContext, intentContext: SendMessageIntentContext, peerIds: [EnginePeer.Id]) {
+    guard siriIntentsAvailable else { return }
     if #available(iOSApplicationExtension 13.2, iOS 13.2, *) {
         let _ = (sharedContext.accountManager.transaction { transaction -> Bool in
             if case .none = transaction.getAccessChallengeData() {
@@ -214,12 +225,14 @@ public func donateSendMessageIntent(account: Account, sharedContext: SharedAccou
 }
 
 public func deleteSendMessageIntents(peerId: EnginePeer.Id) {
+    guard siriIntentsAvailable else { return }
     if #available(iOS 10.0, *) {
         INInteraction.delete(with: "sendMessage_\(peerId.toInt64())")
     }
 }
 
 public func deleteAllSendMessageIntents() {
+    guard siriIntentsAvailable else { return }
     if #available(iOS 10.0, *) {
         INInteraction.deleteAll()
     }

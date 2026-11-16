@@ -3,12 +3,20 @@ import UIKit
 import CallKit
 import Intents
 import AVFoundation
+import BuildConfig
 import TelegramCore
 import SwiftSignalKit
 import AppBundle
 import AccountContext
 import TelegramAudio
 import TelegramVoip
+
+// Donating call intents requires the `com.apple.developer.siri` entitlement,
+// which re-signed installs do not have; skip when Siri is disabled in the build.
+private let callIntentsAvailable: Bool = {
+    guard let bundleId = Bundle.main.bundleIdentifier else { return false }
+    return BuildConfig(baseAppBundleId: bundleId).isSiriEnabled
+}()
 
 private let sharedProviderDelegate: CallKitProviderDelegate? = {
     return CallKitProviderDelegate()
@@ -96,6 +104,7 @@ public final class CallKitIntegration {
     }
     
     private func donateIntent(peerId: EnginePeer.Id, displayTitle: String, localContactId: String?) {
+        guard callIntentsAvailable else { return }
         let handle = INPersonHandle(value: "tg\(peerId.id._internalGetInt64Value())", type: .unknown)
         let contact = INPerson(personHandle: handle, nameComponents: nil, displayName: displayTitle, image: nil, contactIdentifier: localContactId, customIdentifier: "tg\(peerId.id._internalGetInt64Value())")
     
