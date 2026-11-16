@@ -387,8 +387,12 @@ class ThemeSettingsAppIconItemNode: ListViewItemNode, ItemListItemNode {
                             var name = "Icon"
                             var bordered = true
                             switch icon.name {
+                                case "NetBlueIcon":
+                                    name = "Net Blue"
+                                case "NetBlackIcon":
+                                    name = "Net Black"
                                 case "BlueIcon":
-                                    name = item.strings.Appearance_AppIconDefault
+                                    name = "Telegram Blue"
                                 case "BlackIcon":
                                     name = item.strings.Appearance_AppIconDefaultX
                                 case "BlueClassicIcon":
