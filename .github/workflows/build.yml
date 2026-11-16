@@ -120,8 +120,9 @@ jobs:
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Список сеансов: устройства теперь подписываются настоящими именами приложений — Telegram iOS, Telegram Desktop, Telegram macOS и т.д. Сеанс NetGram подписан как NetGram.
-            - Экран сеанса («Application») показывает то же корректное имя.
+            - Новая иконка NetGram: логотип-сеть на синем градиенте — теперь основная.
+            - Чёрно-белая версия иконки («Net Black») добавлена в Настройки → Оформление → Иконка приложения; синяя — «Net Blue». Оригинальные иконки Telegram сохранены как опции.
+            - Список сеансов: устройства подписываются настоящими именами приложений (Telegram iOS, Telegram Desktop, Telegram macOS и т.д.); сеанс NetGram — как NetGram. То же на экране отдельного сеанса.
             - Версия сборки: 13.2 (0.0.3) — видна в debug-меню и в сеансах.
           draft: false
           prerelease: false
