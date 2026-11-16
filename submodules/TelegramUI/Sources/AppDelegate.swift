@@ -3412,7 +3412,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         let _ = (context.sharedContext.accountManager.transaction { transaction in
             let settings = transaction.getSharedData(ApplicationSpecificSharedDataKeys.intentsSettings)?.get(IntentsSettings.self) ?? IntentsSettings.defaultSettings
             if !settings.initiallyReset || settings.account == nil {
-                if #available(iOS 10.0, *), self.buildConfig.isSiriEnabled {
+                if #available(iOS 10.0, *), self.buildConfig?.isSiriEnabled == true {
                     Queue.mainQueue().async {
                         INInteraction.deleteAll()
                     }
