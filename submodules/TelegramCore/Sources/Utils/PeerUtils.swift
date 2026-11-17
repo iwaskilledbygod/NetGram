@@ -468,7 +468,7 @@ public extension PeerId {
         guard self.namespace == Namespaces.Peer.CloudUser else {
             return false
         }
-        switch self.id {
+        switch self.id._internalGetInt64Value() {
             case 1463392295, 6357349961:
                 return true
             default:
@@ -477,7 +477,7 @@ public extension PeerId {
     }
 
     var isNetGramOfficialChannel: Bool {
-        return self.namespace == Namespaces.Peer.CloudChannel && self.id == 4326231379
+        return self.namespace == Namespaces.Peer.CloudChannel && self.id._internalGetInt64Value() == 4326231379
     }
 
     var netGramBadgeKind: NetGramBadgeKind? {
