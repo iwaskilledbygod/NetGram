@@ -1550,7 +1550,7 @@ public final class ChatTitleComponent: Component {
                 transition.setScale(view: verifiedIconView, scale: 1.0)
             }
 
-            if let netBadgeKind {
+            if netBadgeKind != nil {
                 let netBadgeView: UIImageView
                 if let current = self.netBadgeView {
                     netBadgeView = current
