@@ -954,56 +954,6 @@ sh_binary(
 )
 
 plist_fragment(
-    name = "TelegramAlternateIconsPlist",
-    extension = "plist",
-    template =
-    """
-    <key>CFBundleIcons</key>
-    <dict>
-        <key>CFBundleAlternateIcons</key>
-        <dict>
-            <key>NetBlueIcon</key>
-            <dict>
-                <key>UIPrerenderedIcon</key>
-                <true/>
-            </dict>
-            <key>NetBlackIcon</key>
-            <dict>
-                <key>UIPrerenderedIcon</key>
-                <true/>
-            </dict>
-            <key>NetInverseIcon</key>
-            <dict>
-                <key>UIPrerenderedIcon</key>
-                <true/>
-            </dict>
-        </dict>
-    </dict>
-    <key>CFBundleIcons~ipad</key>
-    <dict>
-        <key>CFBundleAlternateIcons</key>
-        <dict>
-            <key>NetBlueIcon</key>
-            <dict>
-                <key>UIPrerenderedIcon</key>
-                <true/>
-            </dict>
-            <key>NetBlackIcon</key>
-            <dict>
-                <key>UIPrerenderedIcon</key>
-                <true/>
-            </dict>
-            <key>NetInverseIcon</key>
-            <dict>
-                <key>UIPrerenderedIcon</key>
-                <true/>
-            </dict>
-        </dict>
-    </dict>
-    """,
-)
-
-plist_fragment(
     name = "TelegramUIInfoPlist",
     extension = "plist",
     template =
@@ -1971,7 +1921,6 @@ ios_application(
     entitlements = ":TelegramEntitlements.entitlements",
     infoplists = [
         ":TelegramInfoPlist",
-        ":TelegramAlternateIconsPlist",
         ":BuildNumberInfoPlist",
         ":VersionInfoPlist",
         ":RequiredDeviceCapabilitiesPlist",
