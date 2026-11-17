@@ -329,6 +329,7 @@ filegroup(
 alternate_icon_folders = [
     "NetBlueIcon",
     "NetBlackIcon",
+    "NetInverseIcon",
     "BlackIcon",
     "BlackClassicIcon",
     "BlackFilledIcon",

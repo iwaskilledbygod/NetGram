@@ -57,7 +57,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.3"
+          export BUILD_NUMBER="0.0.4"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -113,17 +113,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}
-          # Название: NetGram 13.2 (0.0.3). Перед запуском сборки обнови
+          # Название: NetGram 13.2 (0.0.4). Перед запуском сборки обнови
           # «Что нового» ниже — только изменения, видимые пользователю.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Новая иконка NetGram: логотип-сеть на синем градиенте — теперь основная.
-            - Чёрно-белая версия иконки («Net Black») добавлена в Настройки → Оформление → Иконка приложения; синяя — «Net Blue». Оригинальные иконки Telegram сохранены как опции.
-            - Список сеансов: устройства подписываются настоящими именами приложений (Telegram iOS, Telegram Desktop, Telegram macOS и т.д.); сеанс NetGram — как NetGram. То же на экране отдельного сеанса.
-            - Версия сборки: 13.2 (0.0.3) — видна в debug-меню и в сеансах.
+            - Официальная иконка Telegram Blue снова стоит по умолчанию. В Настройки → Оформление → Иконка приложения: «Net-Classic» (сеть на синем градиенте), «Net-Black», «Net-Inverse» (белый фон, чёрная сеть) и иконки Telegram.
+            - При имени разработчиков NetGram (ID 1463392295 и 6357349961) слева показывается бейдж NetGram, рядом — метка «Разработчик NetGram.»
+            - У официального канала NetGram (t.me/NetGram_dev) рядом с именем — бейдж и метка «Официальный ресурс NetGram.»
+            - Бейджи видны в списке чатов, в шапке чата, в профиле и у имени автора сообщений.
           draft: false
           prerelease: false
 

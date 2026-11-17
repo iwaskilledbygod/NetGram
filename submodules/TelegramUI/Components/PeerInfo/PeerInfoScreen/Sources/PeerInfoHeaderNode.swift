@@ -132,6 +132,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
     let titleNode: MultiScaleTextNode
     var standardTitle: ComponentView<Empty>?
     
+    let titleNetBadgeView: UIImageView
     let titleCredibilityIconView: ComponentHostView<Empty>
     var credibilityIconSize: CGSize?
     let titleExpandedCredibilityIconView: ComponentHostView<Empty>
@@ -311,6 +312,12 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         // The peer's name is the screen's title. (Its text elements carry the label; the containers stay unlabelled.)
         self.titleNode.textAccessibilityTraits = .header
         
+        self.titleNetBadgeView = UIImageView()
+        self.titleNetBadgeView.isUserInteractionEnabled = false
+        self.titleNetBadgeView.contentMode = .scaleAspectFit
+        self.titleNetBadgeView.isHidden = true
+        self.titleNode.stateNode(forKey: TitleNodeStateRegular)?.view.addSubview(self.titleNetBadgeView)
+
         self.titleCredibilityIconView = ComponentHostView<Empty>()
         self.titleNode.stateNode(forKey: TitleNodeStateRegular)?.view.addSubview(self.titleCredibilityIconView)
         
@@ -1275,6 +1282,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         let titleShadowColor: UIColor? = nil
         
         var displayStandardTitle = false
+        var netBadgeKind: NetGramBadgeKind?
         
         if let peer = peer {
             var title: String
@@ -1291,6 +1299,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 title = threadData.info.title
             } else {
                 title = peer.displayTitle(strings: presentationData.strings, displayOrder: presentationData.nameDisplayOrder)
+                netBadgeKind = peer.id.netGramBadgeKind
             }
             title = title.replacingOccurrences(of: "\u{1160}", with: "").replacingOccurrences(of: "\u{3164}", with: "")
             if title.replacingOccurrences(of: "\u{fe0e}", with: "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -1437,6 +1446,9 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         let expandedAvatarHeight: CGFloat = expandedAvatarListSize.height
         
         var titleConstrainedSize = CGSize(width: width - stripLeft - stripRight - textSideInset * 2.0 - (isPremium || isVerified || isFake ? 20.0 : 0.0), height: .greatestFiniteMagnitude)
+        if netBadgeKind != nil {
+            titleConstrainedSize.width -= 22.0 + 6.0
+        }
         if self.navigationRowRightButtonCount > 1 {
             titleConstrainedSize.width -= 60.0
         }
@@ -1698,6 +1710,16 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         var titleExpandedHorizontalOffset: CGFloat = 0.0
         var nextIconX: CGFloat = titleSize.width
         var nextExpandedIconX: CGFloat = titleExpandedSize.width
+
+        if netBadgeKind != nil {
+            let netBadgeSize = CGSize(width: 22.0, height: 22.0)
+            self.titleNetBadgeView.image = UIImage(bundleImageName: "NetBadge")
+            self.titleNetBadgeView.isHidden = false
+            transition.updateFrame(view: self.titleNetBadgeView, frame: CGRect(origin: CGPoint(x: -netBadgeSize.width - 6.0, y: floor((titleSize.height - netBadgeSize.height) / 2.0)), size: netBadgeSize))
+            titleHorizontalOffset += (netBadgeSize.width + 6.0) / 2.0
+        } else {
+            self.titleNetBadgeView.isHidden = true
+        }
         
         if let statusIconSize = self.statusIconSize, let titleExpandedStatusIconSize = self.titleExpandedStatusIconSize, statusIconSize.width > 0.0 {
             let offset = (statusIconSize.width + 4.0) / 2.0

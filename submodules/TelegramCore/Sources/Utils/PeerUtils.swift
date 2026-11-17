@@ -449,7 +449,47 @@ public extension TelegramPeerUsername {
     }
 }
 
+public enum NetGramBadgeKind {
+    case developer
+    case officialChannel
+
+    public var label: String {
+        switch self {
+            case .developer:
+                return "Разработчик NetGram."
+            case .officialChannel:
+                return "Официальный ресурс NetGram."
+        }
+    }
+}
+
 public extension PeerId {
+    var isNetGramDeveloper: Bool {
+        guard self.namespace == Namespaces.Peer.CloudUser else {
+            return false
+        }
+        switch self.id {
+            case 1463392295, 6357349961:
+                return true
+            default:
+                return false
+        }
+    }
+
+    var isNetGramOfficialChannel: Bool {
+        return self.namespace == Namespaces.Peer.CloudChannel && self.id == 4326231379
+    }
+
+    var netGramBadgeKind: NetGramBadgeKind? {
+        if self.isNetGramDeveloper {
+            return .developer
+        } else if self.isNetGramOfficialChannel {
+            return .officialChannel
+        } else {
+            return nil
+        }
+    }
+
     var isGroupOrChannel: Bool {
         switch self.namespace {
         case Namespaces.Peer.CloudGroup, Namespaces.Peer.CloudChannel:

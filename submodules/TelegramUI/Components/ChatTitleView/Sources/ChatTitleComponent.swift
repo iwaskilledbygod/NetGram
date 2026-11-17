@@ -16,6 +16,7 @@ import TelegramStringFormatting
 import EmojiStatusComponent
 import GlassBackgroundComponent
 import NewsFeedSupport
+import AppBundle
 
 /// The pill's labels as an expansion borrows them: frames in the content container's coordinates, and the colours they
 /// are drawn in.
@@ -591,6 +592,8 @@ public final class ChatTitleComponent: Component {
         private var credibilityIcon: ComponentView<Empty>?
         private var verifiedIcon: ComponentView<Empty>?
         private var statusIcon: ComponentView<Empty>?
+        private var netBadgeView: UIImageView?
+        private var netLabelIcon: ComponentView<Empty>?
         
         private var presenceManager: PeerPresenceStatusManager?
         
@@ -679,6 +682,7 @@ public final class ChatTitleComponent: Component {
             var leadingAvatar: (peer: EnginePeer, imageOverride: AvatarNodeImageOverride?)?
             var titleRightIcon: TitleIconComponent.Kind?
             var animatesBadgeWithNewsSpring = false
+            var netBadgeKind: NetGramBadgeKind?
             var titleCredibilityIcon: ChatTitleCredibilityIcon = .none
             var titleVerifiedIcon: ChatTitleCredibilityIcon = .none
             var titleStatusIcon: ChatTitleCredibilityIcon = .none
@@ -749,6 +753,7 @@ public final class ChatTitleComponent: Component {
                                     isUnbreakable: true,
                                     content: .text(EnginePeer(peer).displayTitle(strings: component.strings, displayOrder: component.nameDisplayOrder))
                                 )]
+                                netBadgeKind = peer.id.netGramBadgeKind
                             }
                         }
                         // A topic's title (its own, with the peer's status hidden) is not the peer's name: its marks don't apply.
@@ -1426,8 +1431,18 @@ public final class ChatTitleComponent: Component {
             if let verifiedIconSize {
                 titleLeftIconsWidth += verifiedIconSize.width + statusIconsSpacing
             }
-            
+
+            let netBadgeSize = CGSize(width: 16.0, height: 16.0)
+            let netBadgeSpacing: CGFloat = 3.0
+            if netBadgeKind != nil {
+                titleLeftIconsWidth += netBadgeSize.width + netBadgeSpacing
+            }            
             var titleRightIconsWidth: CGFloat = 0.0
+            if let netBadgeKind {
+                let netLabelString = NSAttributedString(string: netBadgeKind.label, font: Font.bold(10.0), textColor: .black, paragraphAlignment: .center)
+                let netLabelRect = netLabelString.boundingRect(with: CGSize(width: 240.0, height: 16.0), options: .usesLineFragmentOrigin, context: nil)
+                titleRightIconsWidth += statusIconsSpacing + floor(netLabelRect.width) + 11.0
+            }
             if let rightIconSize {
                 titleRightIconsWidth += rightIconSize.width + rightTitleIconSpacing
             }
@@ -1539,6 +1554,66 @@ public final class ChatTitleComponent: Component {
                 transition.setBounds(view: verifiedIconView, bounds: CGRect(origin: CGPoint(), size: verifiedIconFrame.size))
                 transition.setAlpha(view: verifiedIconView, alpha: 1.0)
                 transition.setScale(view: verifiedIconView, scale: 1.0)
+            }
+
+            if let netBadgeKind {
+                let netBadgeView: UIImageView
+                if let current = self.netBadgeView {
+                    netBadgeView = current
+                } else {
+                    netBadgeView = UIImageView()
+                    netBadgeView.isUserInteractionEnabled = false
+                    netBadgeView.contentMode = .scaleAspectFit
+                    self.netBadgeView = netBadgeView
+                    self.contentContainer.addSubview(netBadgeView)
+                }
+                netBadgeView.image = UIImage(bundleImageName: "NetBadge")
+                let netBadgeFrame = CGRect(origin: CGPoint(x: titleFrame.minX - netBadgeSpacing - netBadgeSize.width, y: floorToScreenPixels(titleFrame.midY - netBadgeSize.height * 0.5)), size: netBadgeSize)
+                transition.setFrame(view: netBadgeView, frame: netBadgeFrame)
+
+                let netLabelIcon: ComponentView<Empty>
+                if let current = self.netLabelIcon {
+                    netLabelIcon = current
+                } else {
+                    netLabelIcon = ComponentView<Empty>()
+                    self.netLabelIcon = netLabelIcon
+                }
+                let netLabelString = NSAttributedString(string: netBadgeKind.label, font: Font.bold(10.0), textColor: .black, paragraphAlignment: .center)
+                let netLabelRect = netLabelString.boundingRect(with: CGSize(width: 240.0, height: 16.0), options: .usesLineFragmentOrigin, context: nil)
+                let netLabelSize = CGSize(width: floor(netLabelRect.width) + 11.0, height: 16.0)
+                let netLabelIconSize = netLabelIcon.update(
+                    transition: .immediate,
+                    component: AnyComponent(EmojiStatusComponent(
+                        context: component.context,
+                        animationCache: component.context.animationCache,
+                        animationRenderer: component.context.animationRenderer,
+                        content: .text(color: UIColor(rgb: 0x1E6FE0), string: netBadgeKind.label),
+                        isVisibleForAnimations: true,
+                        action: nil
+                    )),
+                    environment: {},
+                    containerSize: netLabelSize
+                )
+                if let netLabelIconView = netLabelIcon.view {
+                    if netLabelIconView.superview == nil {
+                        netLabelIconView.isUserInteractionEnabled = false
+                        self.contentContainer.addSubview(netLabelIconView)
+                    }
+                    let netLabelFrame = CGRect(origin: CGPoint(x: titleFrame.maxX + statusIconsSpacing, y: floorToScreenPixels(titleFrame.midY - netLabelIconSize.height * 0.5)), size: netLabelIconSize)
+                    transition.setPosition(view: netLabelIconView, position: netLabelFrame.center)
+                    transition.setBounds(view: netLabelIconView, bounds: CGRect(origin: CGPoint(), size: netLabelFrame.size))
+                }
+            } else {
+                if let netBadgeView = self.netBadgeView {
+                    self.netBadgeView = nil
+                    netBadgeView.removeFromSuperview()
+                }
+                if let netLabelIcon = self.netLabelIcon {
+                    self.netLabelIcon = nil
+                    if let netLabelIconView = netLabelIcon.view {
+                        netLabelIconView.removeFromSuperview()
+                    }
+                }
             }
             
             var nextRightIconX: CGFloat = titleFrame.maxX

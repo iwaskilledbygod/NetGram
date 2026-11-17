@@ -98,6 +98,8 @@ private struct BubblelessHeaderTime {
     var views: (icon: UIImage, iconOrigin: CGPoint, size: CGSize, origin: CGPoint, apply: () -> TextNode)?
 }
 
+let chatMessageNetBadgeSize = CGSize(width: 15.0, height: 15.0)
+
 private struct BubbleItemAttributes {
     var index: Int?
     var isAttachment: Bool
@@ -835,6 +837,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
     
     // The author's third-party verification icon, left of the name.
     private var verificationIconView: ComponentHostView<Empty>?
+    private var netBadgeView: UIImageView?
     private var verificationIconComponent: EmojiStatusComponent?
     
     private var boostBadgeNode: TextNode?
@@ -2329,6 +2332,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
         }
         
         var authorNameString: String?
+        var authorNetBadgeKind: NetGramBadgeKind?
         var authorRank: CachedChannelAdminRank?
         var authorIsChannel: Bool = false
         switch content {
@@ -2757,6 +2761,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
         if initialDisplayHeader && displayAuthorInfo {
             if let peer = firstMessage.peers[firstMessage.id.peerId] as? TelegramChannel, case .broadcast = peer.info, item.content.firstMessage.adAttribute == nil, !overrideEffectiveAuthor {
                 authorNameString = EnginePeer(peer).displayTitle(strings: item.presentationData.strings, displayOrder: item.presentationData.nameDisplayOrder)
+                authorNetBadgeKind = peer.id.netGramBadgeKind
                 
                 let peer = (peer as Peer)
                 let nameColors: PeerNameColors.Colors?
@@ -2776,6 +2781,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 if effectiveAuthor.id != item.message.id.peerId {
                     authorVerificationIconFileId = effectiveAuthor.verificationIconFileId
                 }
+                authorNetBadgeKind = effectiveAuthor.id.netGramBadgeKind
                 
                 let nameColors: PeerNameColors.Colors
                 switch effectiveAuthor.nameColor {
@@ -3175,7 +3181,8 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 
                 let verificationIconWidth = ChatMessageAuthorVerificationIcon.leadingWidth(iconSize: authorVerificationIcon != nil ? ChatMessageAuthorVerificationIcon.size : nil)
                 
-                var nameMaximumWidth = maximumNodeWidth - layoutConstants.text.bubbleInsets.left - layoutConstants.text.bubbleInsets.right - verificationIconWidth - credibilityIconWidth - rankBadgeSizeAndApply.0.size.width - closeButtonWidth
+                let netBadgeWidth: CGFloat = authorNetBadgeKind != nil ? chatMessageNetBadgeSize.width + 3.0 : 0.0
+                var nameMaximumWidth = maximumNodeWidth - layoutConstants.text.bubbleInsets.left - layoutConstants.text.bubbleInsets.right - verificationIconWidth - credibilityIconWidth - rankBadgeSizeAndApply.0.size.width - closeButtonWidth - netBadgeWidth
                 var bubblelessHeaderRunWidth: CGFloat = 0.0
                 if bubbleStyle.isBubbleless {
                     // Without a bubble the time leaves the corner and follows the name and its rank badge, on the name's
@@ -4259,6 +4266,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 nameNodeSizeApply: nameNodeSizeApply,
                 bubblelessHeaderTime: bubblelessHeaderTime,
                 bubblelessHeaderRankOffset: bubblelessHeaderRankOffset,
+                authorNetBadgeKind: authorNetBadgeKind,
                 bubblelessLeadCenterY: bubblelessLeadCenterY,
                 hasAvatar: hasAvatar,
                 viaWidth: viaWidth,
@@ -4343,6 +4351,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
         nameNodeSizeApply: (CGSize, () -> TextNode?),
         bubblelessHeaderTime: BubblelessHeaderTime?,
         bubblelessHeaderRankOffset: CGFloat?,
+        authorNetBadgeKind: NetGramBadgeKind?,
         bubblelessLeadCenterY: CGFloat?,
         hasAvatar: Bool,
         viaWidth: CGFloat,
@@ -4586,6 +4595,9 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
             
             // Above a card the name stays on the text column rather than at the card's inner inset.
             var nameNodeFrame = CGRect(origin: CGPoint(x: contentOrigin.x + (bubblelessCardTopInset != nil ? 0.0 : layoutConstants.text.bubbleInsets.left), y: layoutConstants.bubble.contentInsets.top + nameNodeOriginY), size: nameNodeSizeApply.0)
+            if authorNetBadgeKind != nil {
+                nameNodeFrame.origin.x += chatMessageNetBadgeSize.width + 3.0
+            }
             
             var nameNavigateButtonOffset: CGFloat = currentCredibilityIcon == nil ? 4.0 : 28.0
             nameNavigateButtonOffset += 34.0
@@ -4707,6 +4719,24 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
             }
             
             var verificationIconFrame: CGRect?
+            if let authorNetBadgeKind {
+                let netBadgeView: UIImageView
+                if let current = strongSelf.netBadgeView {
+                    netBadgeView = current
+                } else {
+                    netBadgeView = UIImageView()
+                    netBadgeView.isUserInteractionEnabled = false
+                    netBadgeView.contentMode = .scaleAspectFit
+                    strongSelf.netBadgeView = netBadgeView
+                    strongSelf.clippingNode.view.addSubview(netBadgeView)
+                }
+                netBadgeView.image = UIImage(bundleImageName: "NetBadge")
+                netBadgeView.frame = CGRect(origin: CGPoint(x: nameNodeFrame.minX - chatMessageNetBadgeSize.width - 3.0, y: floor(nameNodeFrame.midY - chatMessageNetBadgeSize.height * 0.5)), size: chatMessageNetBadgeSize)
+            } else if let netBadgeView = strongSelf.netBadgeView {
+                strongSelf.netBadgeView = nil
+                netBadgeView.removeFromSuperview()
+            }
+
             if let authorVerificationIcon {
                 let verificationIconView: ComponentHostView<Empty>
                 var animateVerificationIconFrame = true
@@ -5243,6 +5273,8 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 strongSelf.credibilityIconView = nil
                 strongSelf.verificationIconView?.removeFromSuperview()
                 strongSelf.verificationIconView = nil
+                strongSelf.netBadgeView?.removeFromSuperview()
+                strongSelf.netBadgeView = nil
                 strongSelf.verificationIconComponent = nil
                 strongSelf.boostBadgeNode?.removeFromSupernode()
                 strongSelf.boostBadgeNode = nil
@@ -8451,7 +8483,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 let headerNodes = [self.nameNode, self.bubblelessHeaderDateNode, self.bubblelessHeaderViewsIconNode, self.bubblelessHeaderViewsNode].compactMap { $0 }
                 // The header's badges and icons keep alphas of their own, so they are hidden rather than faded.
                 let badgeNodes: [ASDisplayNode?] = [self.nameAvatarNode, self.rankBackgroundNode, self.rankBadgeNode, self.ephemeralBadgeBackgroundNode, self.ephemeralBadgeTextNode, self.boostBadgeNode]
-                let badgeViews: [UIView?] = [self.nameNavigateButton, self.credibilityIconView, self.verificationIconView, self.ephemeralBadgeIconNode, self.boostIconNode]
+                let badgeViews: [UIView?] = [self.nameNavigateButton, self.netBadgeView, self.credibilityIconView, self.verificationIconView, self.ephemeralBadgeIconNode, self.boostIconNode]
                 let headerBadgeLayers = badgeNodes.compactMap { $0?.layer } + badgeViews.compactMap { $0?.layer }
                 for headerNode in headerNodes {
                     transition.updateAlpha(node: headerNode, alpha: 0.0)
