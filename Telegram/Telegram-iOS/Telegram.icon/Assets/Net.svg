@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024px" height="1024px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Net</title>
+    <g id="Net" stroke="none" fill="none" fill-rule="nonzero">
+        <g id="links" stroke="#FFFFFF" stroke-width="30">
+            <line x1="430" y1="485" x2="680" y2="168"/>
+            <line x1="430" y1="485" x2="840" y2="440"/>
+            <line x1="430" y1="485" x2="650" y2="790"/>
+            <line x1="430" y1="485" x2="173" y2="715"/>
+        </g>
+        <g id="nodes" fill="#FFFFFF">
+            <circle cx="430" cy="485" r="165"/>
+            <circle cx="680" cy="168" r="75"/>
+            <circle cx="840" cy="440" r="65"/>
+            <circle cx="650" cy="790" r="70"/>
+            <circle cx="173" cy="715" r="65"/>
+        </g>
+    </g>
+</svg>

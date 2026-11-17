@@ -113,7 +113,7 @@ jobs:
 
             ## Что нового
             - Новая иконка «Net-Inverse» — белый фон, чёрный логотип.
-            - Официальная иконка Telegram Blue — по умолчанию; «Net-Classic», «Net-Black», «Net-Inverse» и классические иконки Telegram — на выбор в Настройки → Оформление.
+            - Иконка «Net-Classic» — по умолчанию; «Net-Black», «Net-Inverse», Telegram Blue и классические иконки Telegram — на выбор в Настройки → Оформление.
             - Бейдж NetGram у имён теперь крупнее и не перекрывает имя.
           draft: false
           prerelease: true
