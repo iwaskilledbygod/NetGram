@@ -4719,7 +4719,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
             }
             
             var verificationIconFrame: CGRect?
-            if let authorNetBadgeKind {
+            if authorNetBadgeKind != nil {
                 let netBadgeView: UIImageView
                 if let current = strongSelf.netBadgeView {
                     netBadgeView = current
