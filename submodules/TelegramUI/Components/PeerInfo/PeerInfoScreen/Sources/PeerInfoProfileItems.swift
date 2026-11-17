@@ -586,7 +586,7 @@ func infoItems(
                     } else {
                         footerText = "This Telegram channel is the official resource of NetGram."
                     }
-                    items[currentPeerInfoSection]!.append(PeerInfoScreenCommentItem(id: "NetGramBadgeFooter", text: footerText, useAccentLinkColor: false, linkAction: { _ in
+                    items[currentPeerInfoSection]!.append(PeerInfoScreenCommentItem(id: "NetGramBadgeFooter", icon: .netBadge, text: footerText, useAccentLinkColor: false, linkAction: { _ in
                     }))
                 }
 
@@ -764,7 +764,7 @@ func infoItems(
                     } else {
                         footerText = "This Telegram channel is the official resource of NetGram."
                     }
-                    items[currentPeerInfoSection]!.append(PeerInfoScreenCommentItem(id: "NetGramBadgeFooter", text: footerText, useAccentLinkColor: false, linkAction: { _ in
+                    items[currentPeerInfoSection]!.append(PeerInfoScreenCommentItem(id: "NetGramBadgeFooter", icon: .netBadge, text: footerText, useAccentLinkColor: false, linkAction: { _ in
                     }))
                 }
 

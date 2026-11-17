@@ -1447,7 +1447,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         
         var titleConstrainedSize = CGSize(width: width - stripLeft - stripRight - textSideInset * 2.0 - (isPremium || isVerified || isFake ? 20.0 : 0.0), height: .greatestFiniteMagnitude)
         if netBadgeKind != nil {
-            titleConstrainedSize.width -= 22.0 + 6.0
+            titleConstrainedSize.width -= 22.0 + 4.0
         }
         if self.navigationRowRightButtonCount > 1 {
             titleConstrainedSize.width -= 60.0
@@ -1715,8 +1715,8 @@ final class PeerInfoHeaderNode: ASDisplayNode {
             let netBadgeSize = CGSize(width: 22.0, height: 22.0)
             self.titleNetBadgeView.image = UIImage(bundleImageName: "NetBadge")
             self.titleNetBadgeView.isHidden = false
-            transition.updateFrame(view: self.titleNetBadgeView, frame: CGRect(origin: CGPoint(x: -netBadgeSize.width - 6.0, y: floor((titleSize.height - netBadgeSize.height) / 2.0)), size: netBadgeSize))
-            titleHorizontalOffset += (netBadgeSize.width + 6.0) / 2.0
+            transition.updateFrame(view: self.titleNetBadgeView, frame: CGRect(origin: CGPoint(x: -netBadgeSize.width - 4.0, y: floor((titleSize.height - netBadgeSize.height) / 2.0)), size: netBadgeSize))
+            titleHorizontalOffset += (netBadgeSize.width + 4.0) / 2.0
         } else {
             self.titleNetBadgeView.isHidden = true
         }

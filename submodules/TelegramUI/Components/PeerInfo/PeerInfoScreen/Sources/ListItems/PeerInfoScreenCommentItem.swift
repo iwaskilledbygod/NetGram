@@ -12,6 +12,7 @@ import TelegramCore
 final class PeerInfoScreenCommentItem: PeerInfoScreenItem {
     enum Icon {
         case managedBot
+        case netBadge
     }
     
     enum LinkAction {
@@ -195,6 +196,15 @@ private final class PeerInfoScreenCommentItemNode: PeerInfoScreenItemNode {
                 switch icon {
                 case .managedBot:
                     iconView.image = UIImage(bundleImageName: "Peer Info/ManagedBotInlineTextIcon")?.withRenderingMode(.alwaysTemplate)
+                case .netBadge:
+                    if let badgeImage = UIImage(bundleImageName: "NetBadge") {
+                        let format = UIGraphicsImageRendererFormat()
+                        format.scale = UIScreen.main.scale
+                        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 14.0, height: 14.0), format: format)
+                        iconView.image = renderer.image { _ in
+                            badgeImage.draw(in: CGRect(origin: CGPoint(), size: CGSize(width: 14.0, height: 14.0)))
+                        }.withRenderingMode(.alwaysTemplate)
+                    }
                 }
             }
             iconView.tintColor = presentationData.theme.list.freeTextColor

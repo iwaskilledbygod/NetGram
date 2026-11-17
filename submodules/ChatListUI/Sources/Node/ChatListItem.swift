@@ -1394,7 +1394,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     
                     let _ = authorTitleLayout.1()
                     var authorFrame = CGRect(origin: CGPoint(), size: authorTitleLayout.0.size)
-                    if let netBadgeImage = netBadgeImage {
+                    if let netBadgeImage = netBadgeImage, authorTitle != nil {
                         let netBadgeNode: ASImageNode
                         if let current = self.netBadgeNode {
                             netBadgeNode = current
@@ -4044,7 +4044,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             }
 
             var authorNetBadgeImage: UIImage?
-            if let author = messages.last?.author, author.id.netGramBadgeKind != nil, let image = chatListNetBadgeImage {
+            if effectiveAuthorTitle != nil, let author = messages.last?.author, author.id.netGramBadgeKind != nil, let image = chatListNetBadgeImage {
                 authorNetBadgeImage = image
             }
             let (authorLayout, authorApply) = authorLayout(item.context, rawContentWidth - badgeSize, item.presentationData.theme, effectiveAuthorTitle, forumThreads, authorTopicArrowColor, authorNetBadgeImage)
@@ -5024,8 +5024,8 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                             strongSelf.mainContentContainerNode.addSubnode(netBadgeNode)
                         }
                         netBadgeNode.image = netTitleBadgeImage
-                        transition.updateFrame(node: netBadgeNode, frame: CGRect(origin: CGPoint(x: contentRect.origin.x + titleOffset, y: contentRect.origin.y + floor((titleLayout.size.height - chatListNetBadgeSize.height) / 2.0) + UIScreenPixel), size: chatListNetBadgeSize))
-                        titleOffset += chatListNetBadgeSize.width + 5.0
+                        let netBadgeX = titleOffset - (chatListNetBadgeSize.width + 5.0)
+                        transition.updateFrame(node: netBadgeNode, frame: CGRect(origin: CGPoint(x: contentRect.origin.x + max(0.0, netBadgeX), y: contentRect.origin.y + floor((titleLayout.size.height - chatListNetBadgeSize.height) / 2.0) + UIScreenPixel), size: chatListNetBadgeSize))
                     } else if let netBadgeNode = strongSelf.netBadgeNode {
                         strongSelf.netBadgeNode = nil
                         netBadgeNode.removeFromSupernode()
