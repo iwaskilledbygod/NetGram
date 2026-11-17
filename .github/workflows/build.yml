@@ -91,6 +91,11 @@ jobs:
           if [ -z "$IPA" ]; then echo "Telegram.ipa not found"; exit 1; fi
           cp "$IPA" $OUTPUT_PATH/
 
+      - name: Force white alternate icons
+        run: |
+          cd /Users/Shared/telegram-ios
+          python3 -I build-system/Make/PatchAlternateIconsPlist.py \n            build/artifacts/Telegram.ipa
+
       - name: Validate IPA before release
         run: |
           cd /Users/Shared/telegram-ios
@@ -112,7 +117,7 @@ jobs:
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Новая иконка «Net-Inverse» — белый фон, чёрный логотип.
+            - Новая иконка «Net-Inverse» — белый фон, чёрный логотип; больше не темнеет при тёмном режиме рабочего стола.
             - Иконка «Net-Classic» — по умолчанию; «Net-Black», «Net-Inverse», Telegram Blue и классические иконки Telegram — на выбор в Настройки → Оформление.
             - Бейдж NetGram у имён теперь крупнее и не перекрывает имя.
           draft: false
