@@ -1342,7 +1342,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             return { [weak self] context, constrainedWidth, theme, authorTitle, topics, arrowColor, netBadgeImage in
                 var maxTitleWidth = constrainedWidth
                 if netBadgeImage != nil {
-                    maxTitleWidth -= chatListNetBadgeSize.width + 3.0
+                    maxTitleWidth -= chatListNetBadgeSize.width + 5.0
                 }
                 if !topics.isEmpty {
                     maxTitleWidth = floor(constrainedWidth * 0.7)
@@ -1408,7 +1408,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         }
                         netBadgeNode.image = netBadgeImage
                         netBadgeNode.frame = CGRect(origin: CGPoint(x: 0.0, y: floor((authorFrame.height - chatListNetBadgeSize.height) / 2.0)), size: chatListNetBadgeSize)
-                        authorFrame.origin.x += chatListNetBadgeSize.width + 3.0
+                        authorFrame.origin.x += chatListNetBadgeSize.width + 5.0
                     } else if let netBadgeNode = self.netBadgeNode {
                         self.netBadgeNode = nil
                         netBadgeNode.removeFromSupernode()
@@ -1543,7 +1543,6 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
     var statusIconView: ComponentHostView<Empty>?
     var statusIconComponent: EmojiStatusComponent?
     var netBadgeNode: ASImageNode?
-    var netLabelView: ComponentHostView<Empty>?
     let hiddenPeerIconNode: ASImageNode
     let mutedIconNode: ASImageNode
     var itemTagList: ComponentView<Empty>?
@@ -3519,7 +3518,6 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             }
             
             var netTitleBadgePeerId: EnginePeer.Id?
-            var netLabelKind: NetGramBadgeKind?
             switch contentData {
                 case let .chat(itemPeer, threadInfo, _, _, _, _, _, _, _):
                     if case let .peer(peerData) = item.content, peerData.isSideListAllThreadsItem {
@@ -3872,12 +3870,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             
             var titleLeftOffset: CGFloat = 0.0
             var netTitleBadgeImage: UIImage?
-            if let netTitleBadgePeerId, let netTitleBadgeKind = netTitleBadgePeerId.netGramBadgeKind {
-                netLabelKind = netTitleBadgeKind
-                if netTitleBadgeKind.isDeveloper, let image = chatListNetBadgeImage {
-                    netTitleBadgeImage = image
-                    titleLeftOffset += chatListNetBadgeSize.width + 3.0
-                }
+            if let netTitleBadgePeerId, netTitleBadgePeerId.netGramBadgeKind != nil, let image = chatListNetBadgeImage {
+                netTitleBadgeImage = image
+                titleLeftOffset += chatListNetBadgeSize.width + 5.0
             }
             if let currentVerifiedIconContent {
                 if case .animation = currentVerifiedIconContent {
@@ -4049,7 +4044,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             }
 
             var authorNetBadgeImage: UIImage?
-            if let author = messages.last?.author, let kind = author.id.netGramBadgeKind, kind.isDeveloper, let image = chatListNetBadgeImage {
+            if let author = messages.last?.author, author.id.netGramBadgeKind != nil, let image = chatListNetBadgeImage {
                 authorNetBadgeImage = image
             }
             let (authorLayout, authorApply) = authorLayout(item.context, rawContentWidth - badgeSize, item.presentationData.theme, effectiveAuthorTitle, forumThreads, authorTopicArrowColor, authorNetBadgeImage)
@@ -5030,7 +5025,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         }
                         netBadgeNode.image = netTitleBadgeImage
                         transition.updateFrame(node: netBadgeNode, frame: CGRect(origin: CGPoint(x: contentRect.origin.x + titleOffset, y: contentRect.origin.y + floor((titleLayout.size.height - chatListNetBadgeSize.height) / 2.0) + UIScreenPixel), size: chatListNetBadgeSize))
-                        titleOffset += chatListNetBadgeSize.width + 3.0
+                        titleOffset += chatListNetBadgeSize.width + 5.0
                     } else if let netBadgeNode = strongSelf.netBadgeNode {
                         strongSelf.netBadgeNode = nil
                         netBadgeNode.removeFromSupernode()
@@ -5664,39 +5659,6 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         strongSelf.titleBadge = nil
                         titleBadge.backgroundView.removeFromSuperview()
                         titleBadge.textNode.removeFromSupernode()
-                    }
-
-                    if let netLabelKind = netLabelKind {
-                        let netLabelView: ComponentHostView<Empty>
-                        if let current = strongSelf.netLabelView {
-                            netLabelView = current
-                        } else {
-                            netLabelView = ComponentHostView<Empty>()
-                            strongSelf.netLabelView = netLabelView
-                            strongSelf.mainContentContainerNode.view.addSubview(netLabelView)
-                        }
-                        let netLabelComponent = EmojiStatusComponent(
-                            context: item.context,
-                            animationCache: item.interaction.animationCache,
-                            animationRenderer: item.interaction.animationRenderer,
-                            content: .text(color: UIColor(rgb: 0x1E6FE0), string: netLabelKind.label),
-                            isVisibleForAnimations: strongSelf.visibilityStatus && item.context.sharedContext.energyUsageSettings.loopEmoji,
-                            action: nil
-                        )
-                        let netLabelString = NSAttributedString(string: netLabelKind.label, font: Font.bold(10.0), textColor: .black, paragraphAlignment: .center)
-                        let netLabelRect = netLabelString.boundingRect(with: CGSize(width: 240.0, height: 16.0), options: .usesLineFragmentOrigin, context: nil)
-                        let netLabelSize = CGSize(width: floor(netLabelRect.width) + 11.0, height: 16.0)
-                        let _ = netLabelView.update(
-                            transition: .immediate,
-                            component: AnyComponent(netLabelComponent),
-                            environment: {},
-                            containerSize: netLabelSize
-                        )
-                        transition.updateFrame(view: netLabelView, frame: CGRect(origin: CGPoint(x: nextTitleIconOrigin, y: floorToScreenPixels(titleFrame.maxY - lastLineRect.height * 0.5 - netLabelSize.height / 2.0) - UIScreenPixel), size: netLabelSize))
-                        nextTitleIconOrigin += netLabelSize.width + 4.0
-                    } else if let netLabelView = strongSelf.netLabelView {
-                        strongSelf.netLabelView = nil
-                        netLabelView.removeFromSuperview()
                     }
 
                     let leftSeparatorInset: CGFloat

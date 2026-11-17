@@ -579,6 +579,17 @@ func infoItems(
                     }))
                 }
                                 
+                if let badgeKind = user.id.netGramBadgeKind {
+                    let footerText: String
+                    if case .developer = badgeKind {
+                        footerText = "This account is one of the developers of NetGram."
+                    } else {
+                        footerText = "This Telegram channel is the official resource of NetGram."
+                    }
+                    items[currentPeerInfoSection]!.append(PeerInfoScreenCommentItem(id: "NetGramBadgeFooter", text: footerText, useAccentLinkColor: false, linkAction: { _ in
+                    }))
+                }
+
                 if let verification = (data.cachedData as? CachedUserData)?.verification {
                     let attributedPrefix = NSMutableAttributedString(string: "  ")
                     attributedPrefix.addAttribute(ChatTextInputAttributes.customEmoji, value: ChatTextInputTextCustomEmojiAttribute(interactivelySelectedFromPackId: nil, fileId: verification.iconFileId, file: nil), range: NSMakeRange(0, 1))
@@ -746,6 +757,17 @@ func infoItems(
                     }))
                 }
                 
+                if let badgeKind = channel.id.netGramBadgeKind {
+                    let footerText: String
+                    if case .developer = badgeKind {
+                        footerText = "This account is one of the developers of NetGram."
+                    } else {
+                        footerText = "This Telegram channel is the official resource of NetGram."
+                    }
+                    items[currentPeerInfoSection]!.append(PeerInfoScreenCommentItem(id: "NetGramBadgeFooter", text: footerText, useAccentLinkColor: false, linkAction: { _ in
+                    }))
+                }
+
                 if let verification = (data.cachedData as? CachedChannelData)?.verification {
                     let attributedPrefix = NSMutableAttributedString(string: "  ")
                     attributedPrefix.addAttribute(ChatTextInputAttributes.customEmoji, value: ChatTextInputTextCustomEmojiAttribute(interactivelySelectedFromPackId: nil, fileId: verification.iconFileId, file: nil), range: NSMakeRange(0, 1))

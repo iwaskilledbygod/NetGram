@@ -98,7 +98,7 @@ private struct BubblelessHeaderTime {
     var views: (icon: UIImage, iconOrigin: CGPoint, size: CGSize, origin: CGPoint, apply: () -> TextNode)?
 }
 
-let chatMessageNetBadgeSize = CGSize(width: 15.0, height: 15.0)
+let chatMessageNetBadgeSize = CGSize(width: 18.0, height: 18.0)
 
 private struct BubbleItemAttributes {
     var index: Int?
@@ -3181,7 +3181,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 
                 let verificationIconWidth = ChatMessageAuthorVerificationIcon.leadingWidth(iconSize: authorVerificationIcon != nil ? ChatMessageAuthorVerificationIcon.size : nil)
                 
-                let netBadgeWidth: CGFloat = authorNetBadgeKind != nil ? chatMessageNetBadgeSize.width + 3.0 : 0.0
+                let netBadgeWidth: CGFloat = authorNetBadgeKind != nil ? chatMessageNetBadgeSize.width + 5.0 : 0.0
                 var nameMaximumWidth = maximumNodeWidth - layoutConstants.text.bubbleInsets.left - layoutConstants.text.bubbleInsets.right - verificationIconWidth - credibilityIconWidth - rankBadgeSizeAndApply.0.size.width - closeButtonWidth - netBadgeWidth
                 var bubblelessHeaderRunWidth: CGFloat = 0.0
                 if bubbleStyle.isBubbleless {
@@ -4596,7 +4596,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
             // Above a card the name stays on the text column rather than at the card's inner inset.
             var nameNodeFrame = CGRect(origin: CGPoint(x: contentOrigin.x + (bubblelessCardTopInset != nil ? 0.0 : layoutConstants.text.bubbleInsets.left), y: layoutConstants.bubble.contentInsets.top + nameNodeOriginY), size: nameNodeSizeApply.0)
             if authorNetBadgeKind != nil {
-                nameNodeFrame.origin.x += chatMessageNetBadgeSize.width + 3.0
+                nameNodeFrame.origin.x += chatMessageNetBadgeSize.width + 5.0
             }
             
             var nameNavigateButtonOffset: CGFloat = currentCredibilityIcon == nil ? 4.0 : 28.0
@@ -4731,7 +4731,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                     strongSelf.clippingNode.view.addSubview(netBadgeView)
                 }
                 netBadgeView.image = UIImage(bundleImageName: "NetBadge")
-                netBadgeView.frame = CGRect(origin: CGPoint(x: nameNodeFrame.minX - chatMessageNetBadgeSize.width - 3.0, y: floor(nameNodeFrame.midY - chatMessageNetBadgeSize.height * 0.5)), size: chatMessageNetBadgeSize)
+                netBadgeView.frame = CGRect(origin: CGPoint(x: nameNodeFrame.minX - chatMessageNetBadgeSize.width - 5.0, y: floor(nameNodeFrame.midY - chatMessageNetBadgeSize.height * 0.5)), size: chatMessageNetBadgeSize)
             } else if let netBadgeView = strongSelf.netBadgeView {
                 strongSelf.netBadgeView = nil
                 netBadgeView.removeFromSuperview()

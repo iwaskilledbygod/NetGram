@@ -57,7 +57,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.4"
+          export BUILD_NUMBER="0.0.5"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -91,14 +91,6 @@ jobs:
           if [ -z "$IPA" ]; then echo "Telegram.ipa not found"; exit 1; fi
           cp "$IPA" $OUTPUT_PATH/
 
-          # collect dsym
-          mkdir -p build/DSYMs
-          DSYM_SRC=$(dirname "$IPA")
-          for f in "$DSYM_SRC"/*.dSYM; do
-            cp -R "$f" build/DSYMs/
-          done
-          zip -r "./$OUTPUT_PATH/Telegram.DSYMs.zip" build/DSYMs 1>/dev/null
-
       - name: Validate IPA before release
         run: |
           cd /Users/Shared/telegram-ios
@@ -113,19 +105,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}
-          # Название: NetGram 13.2 (0.0.4). Перед запуском сборки обнови
+          # Название: NetGram 13.2 (0.0.5). Перед запуском сборки обнови
           # «Что нового» ниже — только изменения, видимые пользователю.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Официальная иконка Telegram Blue снова стоит по умолчанию. В Настройки → Оформление → Иконка приложения: «Net-Classic» (сеть на синем градиенте), «Net-Black», «Net-Inverse» (белый фон, чёрная сеть) и иконки Telegram.
-            - При имени разработчиков NetGram (ID 1463392295 и 6357349961) слева показывается бейдж NetGram, рядом — метка «Разработчик NetGram.»
-            - У официального канала NetGram (t.me/NetGram_dev) рядом с именем — бейдж и метка «Официальный ресурс NetGram.»
-            - Бейджи видны в списке чатов, в шапке чата, в профиле и у имени автора сообщений.
+            - Новая иконка «Net-Inverse» — белый фон, чёрный логотип.
+            - «Net-Inverse» больше не темнеет при тёмном режиме рабочего стола.
+            - Официальная иконка Telegram Blue — по умолчанию; «Net-Classic», «Net-Black», «Net-Inverse» и классические иконки Telegram — на выбор в Настройки → Оформление.
+            - Бейдж NetGram у имён теперь крупнее и не перекрывает имя.
           draft: false
-          prerelease: false
+          prerelease: true
 
       - name: Upload Release IPA
         id: upload-release-ipa 
@@ -138,13 +130,4 @@ jobs:
           asset_name: NetGram.ipa
           asset_content_type: application/zip
 
-      - name: Upload Release DSYM
-        id: upload-release-dsym 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
-          asset_name: NetGram.DSYMs.zip
-          asset_content_type: application/zip
+
