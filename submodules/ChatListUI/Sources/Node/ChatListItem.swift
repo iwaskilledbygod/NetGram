@@ -1344,7 +1344,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
 
             return { [weak self] context, constrainedWidth, theme, authorTitle, topics, arrowColor, netBadgeImage in
                 var maxTitleWidth = constrainedWidth
-                if let netBadgeImage {
+                if netBadgeImage != nil {
                     maxTitleWidth -= chatListNetBadgeSize.width + 3.0
                 }
                 if !topics.isEmpty {
@@ -3521,7 +3521,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 }
             }
             
-            var netTitleBadgePeerId: PeerId?
+            var netTitleBadgePeerId: EnginePeer.Id?
             var netLabelKind: NetGramBadgeKind?
             switch contentData {
                 case let .chat(itemPeer, threadInfo, _, _, _, _, _, _, _):
