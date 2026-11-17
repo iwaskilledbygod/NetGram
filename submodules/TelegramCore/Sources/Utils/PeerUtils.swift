@@ -453,6 +453,13 @@ public enum NetGramBadgeKind {
     case developer
     case officialChannel
 
+    public var isDeveloper: Bool {
+        if case .developer = self {
+            return true
+        }
+        return false
+    }
+
     public var label: String {
         switch self {
             case .developer:

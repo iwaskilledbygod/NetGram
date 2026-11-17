@@ -30,7 +30,6 @@ import MultilineTextWithEntitiesComponent
 import ShimmerEffect
 import GlassBackgroundComponent
 
-let chatListNetBadgeImage = UIImage(bundleImageName: "NetBadge")
 let chatListNetBadgeSize = CGSize(width: 15.0, height: 15.0)
 
 public enum ChatListItemContent {
@@ -3876,9 +3875,11 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             var titleLeftOffset: CGFloat = 0.0
             var netTitleBadgeImage: UIImage?
             if let netTitleBadgePeerId, let netTitleBadgeKind = netTitleBadgePeerId.netGramBadgeKind {
-                netTitleBadgeImage = chatListNetBadgeImage
                 netLabelKind = netTitleBadgeKind
-                titleLeftOffset += chatListNetBadgeSize.width + 3.0
+                if netTitleBadgeKind.isDeveloper, let image = chatListNetBadgeImage {
+                    netTitleBadgeImage = image
+                    titleLeftOffset += chatListNetBadgeSize.width + 3.0
+                }
             }
             if let currentVerifiedIconContent {
                 if case .animation = currentVerifiedIconContent {
@@ -4050,8 +4051,8 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             }
 
             var authorNetBadgeImage: UIImage?
-            if let effectiveAuthorTitle, let author = messages.last?.author, author.id.netGramBadgeKind != nil {
-                authorNetBadgeImage = chatListNetBadgeImage
+            if let author = messages.last?.author, let kind = author.id.netGramBadgeKind, kind.isDeveloper, let image = chatListNetBadgeImage {
+                authorNetBadgeImage = image
             }
             let (authorLayout, authorApply) = authorLayout(item.context, rawContentWidth - badgeSize, item.presentationData.theme, effectiveAuthorTitle, forumThreads, authorTopicArrowColor, authorNetBadgeImage)
             
