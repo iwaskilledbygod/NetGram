@@ -57,7 +57,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.5"
+          export BUILD_NUMBER="0.0.6"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -105,16 +105,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}
-          # Название: NetGram 13.2 (0.0.5). Перед запуском сборки обнови
+          # Название: NetGram 13.2 (0.0.6). Перед запуском сборки обнови
           # «Что нового» ниже — только изменения, видимые пользователю.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Новая иконка «Net-Inverse» — белый фон, чёрный логотип.
             - Иконка «Net-Classic» — по умолчанию; «Net-Black», «Net-Inverse», Telegram Blue и классические иконки Telegram — на выбор в Настройки → Оформление.
-            - Бейдж NetGram у имён теперь крупнее и не перекрывает имя.
+            - Бейдж NetGram у имён крупнее, стоит вплотную к имени и больше не дублируется.
           draft: false
           prerelease: true
 
