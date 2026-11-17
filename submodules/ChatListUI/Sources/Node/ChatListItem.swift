@@ -30,8 +30,6 @@ import MultilineTextWithEntitiesComponent
 import ShimmerEffect
 import GlassBackgroundComponent
 
-let chatListNetBadgeSize = CGSize(width: 15.0, height: 15.0)
-
 public enum ChatListItemContent {
     public final class ThreadInfo: Equatable {
         public let id: Int64
