@@ -25,15 +25,19 @@ jobs:
             xcode-select -p
           fi
 
+      # Отдельные restore/save с ключом на каждый запуск: actions/cache не сохраняет
+      # кеш при точном совпадении ключа, из-за чего кеш «замораживался» и каждый билд
+      # перекомпилировал всё с момента первой загрузки. restore-keys подтягивает самый
+      # свежий снимок, save — всегда пишет новый (даже при падении сборки).
       - name: Restore Bazel cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             /private/var/tmp/netgram-bazel-cache/disk
             /private/var/tmp/netgram-bazel-cache/repos
-          key: bazel-${{ runner.os }}-${{ hashFiles('MODULE.bazel.lock', 'versions.json') }}
+          key: bazel-v2-${{ github.run_id }}
           restore-keys: |
-            bazel-${{ runner.os }}-
+            bazel-v2-
 
       - name: Create canonical source directory
         run: |
@@ -116,6 +120,15 @@ jobs:
             - Бейдж NetGram у имён крупнее, стоит вплотную к имени и больше не дублируется.
           draft: false
           prerelease: true
+
+      - name: Save Bazel cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /private/var/tmp/netgram-bazel-cache/disk
+            /private/var/tmp/netgram-bazel-cache/repos
+          key: bazel-v2-${{ github.run_id }}
 
       - name: Upload Release IPA
         id: upload-release-ipa 
