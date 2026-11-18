@@ -4,12 +4,14 @@ import Display
 import AsyncDisplayKit
 import AccountContext
 import TelegramPresentationData
+import GlassBackgroundComponent
 
 final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
     private let backgroundNode: ASDisplayNode
     private let topSeparatorNode: ASDisplayNode
     private let bottomSeparatorNode: ASDisplayNode
     private let itemContainerNode: ASDisplayNode
+    private var glassBackgroundView: GlassBackgroundView?
     
     private var currentItems: [PeerInfoScreenItem] = []
     var itemNodes: [AnyHashable: PeerInfoScreenItemNode] = [:]
@@ -35,13 +37,32 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         self.addSubnode(self.bottomSeparatorNode)
     }
     
-    func update(context: AccountContext, width: CGFloat, safeInsets: UIEdgeInsets, hasCorners: Bool, presentationData: PresentationData, items: [PeerInfoScreenItem], transition: ContainedViewLayoutTransition) -> CGFloat {
+    func update(context: AccountContext, width: CGFloat, safeInsets: UIEdgeInsets, hasCorners: Bool, presentationData: PresentationData, items: [PeerInfoScreenItem], transition: ContainedViewLayoutTransition, glassTintColor: UIColor? = nil) -> CGFloat {
         self.backgroundNode.backgroundColor = presentationData.theme.list.itemBlocksBackgroundColor
         self.topSeparatorNode.backgroundColor = presentationData.theme.list.itemBlocksSeparatorColor
         self.bottomSeparatorNode.backgroundColor = presentationData.theme.list.itemBlocksSeparatorColor
-        
+
         self.topSeparatorNode.isHidden = hasCorners
         self.bottomSeparatorNode.isHidden = hasCorners
+
+        if let glassTintColor {
+            self.backgroundNode.backgroundColor = .clear
+            self.topSeparatorNode.backgroundColor = .clear
+            self.bottomSeparatorNode.backgroundColor = .clear
+
+            let glassBackgroundView: GlassBackgroundView
+            if let current = self.glassBackgroundView {
+                glassBackgroundView = current
+            } else {
+                glassBackgroundView = GlassBackgroundView(frame: CGRect())
+                self.glassBackgroundView = glassBackgroundView
+                self.view.insertSubview(glassBackgroundView, belowSubview: self.itemContainerNode.view)
+            }
+            glassBackgroundView.clipsToBounds = true
+        } else if let glassBackgroundView = self.glassBackgroundView {
+            glassBackgroundView.removeFromSuperview()
+            self.glassBackgroundView = nil
+        }
         
         var contentHeight: CGFloat = 0.0
         var contentWithBackgroundHeight: CGFloat = 0.0
@@ -126,6 +147,15 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         transition.updateFrame(node: self.backgroundNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset), size: CGSize(width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset))))
         transition.updateFrame(node: self.topSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset - UIScreenPixel), size: CGSize(width: width, height: UIScreenPixel)))
         transition.updateFrame(node: self.bottomSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundHeight), size: CGSize(width: width, height: UIScreenPixel)))
+
+        if let glassBackgroundView = self.glassBackgroundView {
+            let glassFrame = CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset), size: CGSize(width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset)))
+            glassBackgroundView.frame = glassFrame
+            let componentTransition = ComponentTransition(transition)
+            componentTransition.setCornerRadius(layer: glassBackgroundView.layer, cornerRadius: 20.0)
+            let dark = presentationData.theme.overallDarkAppearance
+            glassBackgroundView.update(size: glassFrame.size, cornerRadius: 20.0, isDark: dark, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: glassTintColor ?? UIColor(white: 0.5, alpha: 1.0)), innerColor: nil, innerInset: 3.0), transition: componentTransition)
+        }
         
         if contentHeight.isZero {
             transition.updateAlpha(node: self.topSeparatorNode, alpha: 0.0)

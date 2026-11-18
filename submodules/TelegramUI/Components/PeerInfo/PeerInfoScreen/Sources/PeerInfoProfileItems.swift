@@ -141,14 +141,36 @@ func infoItems(
             items[.calls]!.append(PeerInfoScreenCallListItem(id: ItemCallList, messages: callMessages))
         }
         
+        // NetGram: ID и DC в самом верху единой карточки профиля
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: "netgramShowUserId") {
+            items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2996, label: "User ID", text: String(user.id.id._internalGetInt64Value()), textColor: .accent, action: nil, requestLayout: { _ in
+            }))
+        }
+        if defaults.bool(forKey: "netgramShowUserDc") {
+            var dcId: Int?
+            if let cachedUserData = data.cachedData as? CachedUserData, case let .known(image) = cachedUserData.photo, let image = image {
+                for representation in image.representations {
+                    if let resource = representation.resource as? CloudPeerPhotoSizeMediaResource {
+                        dcId = resource.datacenterId
+                    }
+                }
+            }
+            if let dcId {
+                items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2997, label: "Data Center", text: "DC\(dcId)", textColor: .accent, action: nil, requestLayout: { _ in
+                }))
+            }
+        }
+
+        // NetGram: карточка личного канала объединена с карточкой информации — одна секция
         if let personalChannel = data.personalChannel {
             let peerId = personalChannel.peer.peerId
             var label: String?
             if let subscriberCount = personalChannel.subscriberCount {
                 label = presentationData.strings.Conversation_StatusSubscribers(Int32(subscriberCount))
             }
-            items[.personalChannel]?.append(PeerInfoScreenHeaderItem(id: ItemPersonalChannelHeader, text: presentationData.strings.Profile_PersonalChannelSectionTitle, label: label))
-            items[.personalChannel]?.append(PeerInfoScreenPersonalChannelItem(id: ItemPersonalChannel, context: context, data: personalChannel, controller: { [weak interaction] in
+            items[currentPeerInfoSection]!.append(PeerInfoScreenHeaderItem(id: ItemPersonalChannelHeader, text: presentationData.strings.Profile_PersonalChannelSectionTitle, label: label))
+            items[currentPeerInfoSection]!.append(PeerInfoScreenPersonalChannelItem(id: ItemPersonalChannel, context: context, data: personalChannel, controller: { [weak interaction] in
                 guard let interaction else {
                     return nil
                 }

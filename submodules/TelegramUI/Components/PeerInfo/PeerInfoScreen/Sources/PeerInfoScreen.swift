@@ -176,6 +176,7 @@ enum PeerInfoSettingsSection {
     case passwordSetup
     case dataAndStorage
     case appearance
+    case customization
     case language
     case stickers
     case premium
@@ -5765,12 +5766,18 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                 }
                              
                 let sectionWidth = layout.size.width - insets.left - insets.right
+
+                // NetGram: единая карточка профиля — «жидкое стекло» с персональным цветом
+                var glassTintColor: UIColor?
+                if !self.isSettings, let infoSectionId = sectionId.base as? InfoSection, infoSectionId == .peerInfo, let peer = self.data?.peer, case .user = peer, !self.state.isEditing {
+                    glassTintColor = peer.effectiveProfileColor.flatMap({ self.context.peerNameColors.getProfile($0, dark: self.presentationData.theme.overallDarkAppearance, subject: .palette).main })
+                }
                 if isFirstSection && sectionItems.first is PeerInfoScreenHeaderItem && !self.state.isEditing {
                     if self.data?.peer?.profileColor == nil && !self.headerNode.hasBottomStrip {
                         contentHeight -= 16.0
                     }
                 }
-                let sectionHeight = sectionNode.update(context: self.context, width: sectionWidth, safeInsets: UIEdgeInsets(), hasCorners: !insets.left.isZero, presentationData: self.presentationData, items: sectionItems, transition: transition)
+                let sectionHeight = sectionNode.update(context: self.context, width: sectionWidth, safeInsets: UIEdgeInsets(), hasCorners: !insets.left.isZero, presentationData: self.presentationData, items: sectionItems, transition: transition, glassTintColor: glassTintColor)
                 let sectionFrame = CGRect(origin: CGPoint(x: insets.left, y: contentHeight), size: CGSize(width: sectionWidth, height: sectionHeight))
                 if additive {
                     transition.updateFrameAdditive(node: sectionNode, frame: sectionFrame)
