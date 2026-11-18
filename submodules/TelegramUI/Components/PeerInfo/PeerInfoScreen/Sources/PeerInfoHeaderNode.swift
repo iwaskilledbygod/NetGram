@@ -220,7 +220,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
     let searchBarContainer: SparseNode
     let editingEdgeEffectView: EdgeEffectView
     
-    var musicBackground: UIView?
+    var musicBackground: GlassBackgroundView?
     var music: ComponentView<Empty>?
     var walletBalance: ComponentView<Empty>?
     private var walletBalanceCutoutIcon: (color: UIColor, image: UIImage)?
@@ -2718,8 +2718,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                     musicTransition = .immediate
                 }
                 let musicBackground = self.musicBackground ?? {
-                    let musicBackground = UIView()
-                    musicBackground.backgroundColor = .clear
+                    let musicBackground = GlassBackgroundView()
                     musicBackground.isUserInteractionEnabled = false
                     self.regularContentNode.view.addSubview(musicBackground)
                     self.musicBackground = musicBackground

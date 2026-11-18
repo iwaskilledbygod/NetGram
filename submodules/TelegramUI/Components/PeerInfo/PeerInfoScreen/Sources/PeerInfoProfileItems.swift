@@ -148,7 +148,7 @@ func infoItems(
             }))
         }
         if defaults.bool(forKey: "netgramShowUserDc") {
-            let dcId = context.account.masterDatacenterId
+            let dcId = context.account.network.datacenterId
             items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2997, label: "Data Center", text: "DC\(dcId)", textColor: .accent, action: nil, requestLayout: { _ in
             }))
         }
