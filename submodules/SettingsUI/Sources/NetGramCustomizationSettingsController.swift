@@ -158,11 +158,19 @@ public func customizationSettingsController(context: AccountContext) -> ViewCont
     let arguments = CustomizationArguments(
         toggleUserId: { value in
             UserDefaults.standard.set(value, forKey: "netgramShowUserId")
-            updateState { $0.with { $0.showUserId = value } }
+            updateState { state in
+                var updated = state
+                updated.showUserId = value
+                return updated
+            }
         },
         toggleUserDc: { value in
             UserDefaults.standard.set(value, forKey: "netgramShowUserDc")
-            updateState { $0.with { $0.showUserDc = value } }
+            updateState { state in
+                var updated = state
+                updated.showUserDc = value
+                return updated
+            }
         }
     )
 
