@@ -167,7 +167,7 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         self.action(self, nil)
     }
     
-    func update(size: CGSize, text: String, icon: PeerInfoHeaderButtonIcon, isActive: Bool, presentationData: PresentationData, backgroundColor: UIColor, foregroundColor: UIColor, fraction: CGFloat, transition: ContainedViewLayoutTransition) {
+    func update(size: CGSize, text: String, icon: PeerInfoHeaderButtonIcon, isActive: Bool, presentationData: PresentationData, backgroundColor: UIColor, foregroundColor: UIColor, fraction: CGFloat, useNewButtons: Bool = false, showButtonName: Bool = true, transition: ContainedViewLayoutTransition) {
         self.contextMenuBackgroundColor = backgroundColor
         let previousIcon = self.icon
         let themeUpdated = self.theme != presentationData.theme
@@ -298,7 +298,7 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
             alphaTransition.updateAlpha(node: self.textNode, alpha: isActive ? 1.0 : 0.3)
         }
         
-        self.textNode.attributedText = NSAttributedString(string: text.lowercased(), font: Font.regular(11.0), textColor: .white)
+        self.textNode.attributedText = NSAttributedString(string: showButtonName ? text.lowercased() : "", font: Font.regular(11.0), textColor: useNewButtons ? foregroundColor : .white)
         self.accessibilityLabel = text
         let titleSize = self.textNode.updateLayout(CGSize(width: 120.0, height: .greatestFiniteMagnitude))
         
@@ -309,22 +309,34 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         let backgroundY: CGFloat = size.height * (1.0 - fraction)
         let backgroundFrame = CGRect(origin: CGPoint(x: 0.0, y: backgroundY), size: CGSize(width: size.width, height: max(0.0, size.height - backgroundY)))
         //transition.updateFrame(node: self.backgroundNode, frame: backgroundFrame)
-        transition.updateFrame(view: self.backgroundView, frame: backgroundFrame)
+        let visibleBackgroundFrame: CGRect
+        if useNewButtons {
+            let diameter = min(size.width, 48.0) * fraction
+            visibleBackgroundFrame = CGRect(x: floor((size.width - diameter) * 0.5), y: floor((size.height - diameter) * 0.5), width: diameter, height: diameter)
+        } else {
+            visibleBackgroundFrame = backgroundFrame
+        }
+        transition.updateFrame(view: self.backgroundView, frame: visibleBackgroundFrame)
+        self.backgroundView.backgroundColor = useNewButtons ? backgroundColor : .white
         
         transition.updateSublayerTransformScale(node: self.contentNode, scale: 1.0 * fraction + 0.001 * (1.0 - fraction))
         
-        transition.updateCornerRadius(layer: self.backgroundView.layer, cornerRadius: min(16.0, backgroundFrame.height * 0.5))
+        let cornerRadius = useNewButtons ? visibleBackgroundFrame.height * 0.5 : min(16.0, backgroundFrame.height * 0.5)
+        transition.updateCornerRadius(layer: self.backgroundView.layer, cornerRadius: cornerRadius)
         // The context source contains only the foreground; its backdrop is a
         // separate shared-blur mask. Match both its rounded shape and its visible
         // bounds, including a partially collapsed header.
-        self.referenceNode.contextMenuSourcePath = UIBezierPath(roundedRect: backgroundFrame, cornerRadius: min(16.0, backgroundFrame.height * 0.5))
+        self.referenceNode.contextMenuSourcePath = UIBezierPath(roundedRect: visibleBackgroundFrame, cornerRadius: cornerRadius)
         //self.backgroundNode.update(size: backgroundFrame.size, cornerRadius: min(11.0, backgroundFrame.height * 0.5), transition: transition)
         //self.backgroundNode.updateColor(color: backgroundColor, transition: transition)
-        transition.updateFrame(node: self.iconNode, frame: CGRect(origin: CGPoint(x: floor((size.width - iconSize.width) / 2.0), y: 1.0), size: iconSize))
+        let displayedIconSize = CGSize(width: min(iconSize.width, useNewButtons ? 30.0 : iconSize.width), height: min(iconSize.height, useNewButtons ? 30.0 : iconSize.height))
+        let iconY = useNewButtons ? max(0.0, (size.height - displayedIconSize.height - (showButtonName ? titleSize.height + 5.0 : 0.0)) * 0.5) : 1.0
+        transition.updateFrame(node: self.iconNode, frame: CGRect(origin: CGPoint(x: floor((size.width - displayedIconSize.width) / 2.0), y: iconY), size: displayedIconSize))
         if let animatedIconView = self.animatedIcon?.view {
-            transition.updateFrame(view: animatedIconView, frame: CGRect(origin: CGPoint(x: floor((size.width - iconSize.width) / 2.0), y: 1.0), size: iconSize))
+            transition.updateFrame(view: animatedIconView, frame: CGRect(origin: CGPoint(x: floor((size.width - displayedIconSize.width) / 2.0), y: iconY), size: displayedIconSize))
         }
-        transition.updateFrameAdditiveToCenter(node: self.textNode, frame: CGRect(origin: CGPoint(x: floor((size.width - titleSize.width) / 2.0), y: size.height - titleSize.height - 9.0), size: titleSize))
+        let titleY = useNewButtons ? size.height - titleSize.height - 1.0 : size.height - titleSize.height - 9.0
+        transition.updateFrameAdditiveToCenter(node: self.textNode, frame: CGRect(origin: CGPoint(x: floor((size.width - titleSize.width) / 2.0), y: titleY), size: titleSize))
         
         self.referenceNode.frame = self.containerNode.bounds
         self.updateContextMenuBackground()

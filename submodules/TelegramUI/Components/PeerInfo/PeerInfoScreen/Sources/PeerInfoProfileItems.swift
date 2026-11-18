@@ -153,14 +153,17 @@ func infoItems(
             }))
         }
 
-        // NetGram: карточка личного канала объединена с карточкой информации — одна секция
+        // NetGram: in the new card style the personal channel remains a row, without its section title/count.
         if let personalChannel = data.personalChannel {
             let peerId = personalChannel.peer.peerId
-            var label: String?
-            if let subscriberCount = personalChannel.subscriberCount {
-                label = presentationData.strings.Conversation_StatusSubscribers(Int32(subscriberCount))
+            let useNewInfoCard = UserDefaults.standard.bool(forKey: "netgramUseNewInfoCard")
+            if !useNewInfoCard {
+                var label: String?
+                if let subscriberCount = personalChannel.subscriberCount {
+                    label = presentationData.strings.Conversation_StatusSubscribers(Int32(subscriberCount))
+                }
+                items[currentPeerInfoSection]!.append(PeerInfoScreenHeaderItem(id: ItemPersonalChannelHeader, text: presentationData.strings.Profile_PersonalChannelSectionTitle, label: label))
             }
-            items[currentPeerInfoSection]!.append(PeerInfoScreenHeaderItem(id: ItemPersonalChannelHeader, text: presentationData.strings.Profile_PersonalChannelSectionTitle, label: label))
             items[currentPeerInfoSection]!.append(PeerInfoScreenPersonalChannelItem(id: ItemPersonalChannel, context: context, data: personalChannel, controller: { [weak interaction] in
                 guard let interaction else {
                     return nil

@@ -2317,8 +2317,10 @@ final class PeerInfoHeaderNode: ASDisplayNode {
             }
         }
         
+        let useNewButtons = UserDefaults.standard.bool(forKey: "netgramUseNewButtons")
+        let showButtonName = UserDefaults.standard.bool(forKey: "netgramShowButtonName")
         let buttonWidth = (width - stripLeft - stripRight - buttonSideInset * 2.0 + buttonSpacing) / CGFloat(buttonKeys.count) - buttonSpacing
-        let buttonSize = CGSize(width: buttonWidth, height: 58.0)
+        let buttonSize = CGSize(width: buttonWidth, height: useNewButtons ? (showButtonName ? 82.0 : 58.0) : 58.0)
         var buttonRightOrigin = CGPoint(x: width - stripRight - buttonSideInset, y: backgroundHeight - bottomInset - 16.0 - buttonSize.height)
         if !actionButtonKeys.isEmpty {
             buttonRightOrigin.y += actionButtonSize.height + 24.0
@@ -2412,7 +2414,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 isActive = buttonKey == highlightedButton
             }
             
-            buttonNode.update(size: buttonFrame.size, text: buttonText, icon: buttonIcon, isActive: isActive, presentationData: presentationData, backgroundColor: contentButtonBackgroundColor, foregroundColor: contentButtonForegroundColor, fraction: 1.0 - innerButtonsTransitionFraction, transition: buttonTransition)
+            buttonNode.update(size: buttonFrame.size, text: buttonText, icon: buttonIcon, isActive: isActive, presentationData: presentationData, backgroundColor: contentButtonBackgroundColor, foregroundColor: contentButtonForegroundColor, fraction: 1.0 - innerButtonsTransitionFraction, useNewButtons: useNewButtons, showButtonName: showButtonName, transition: buttonTransition)
             
             if wasAdded {
                 buttonNode.alpha = 0.0
@@ -2712,8 +2714,9 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         }
 
         if currentSavedMusic != nil {
+            let useNewMusicPlayer = UserDefaults.standard.bool(forKey: "netgramUseNewMusicPlayer")
             var musicTransition = transition
-            if hasBackground || self.isAvatarExpanded {
+            if useNewMusicPlayer && (hasBackground || self.isAvatarExpanded) {
                 if self.musicBackground == nil {
                     musicTransition = .immediate
                 }
@@ -2793,7 +2796,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
 
                 let musicString = NSMutableAttributedString()
                 // Keep music inside the profile band, including when a side strip is visible.
-                musicString.append(NSAttributedString(string: track ?? "", font: Font.semibold(12.0), textColor: isOverlay ? .white : presentationData.theme.list.itemAccentColor))
+                musicString.append(NSAttributedString(string: track ?? "", font: Font.semibold(12.0), textColor: useNewMusicPlayer && isOverlay ? .white : presentationData.theme.list.itemAccentColor))
                 let artistSeparatorIndex = musicString.length
                 musicString.append(NSAttributedString(string: " \(artist)", font: Font.regular(12.0), textColor: stripSecondaryColor))
                 musicString.addAttribute(.kern, value: CGFloat(2.0), range: NSRange(location: artistSeparatorIndex, length: 1))
@@ -2855,6 +2858,10 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                         ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeInOut).updateAlpha(layer: musicView.layer, alpha: backgroundBannerAlpha)
                     }
                 }
+            }
+            if !useNewMusicPlayer, let musicBackground = self.musicBackground {
+                self.musicBackground = nil
+                musicBackground.removeFromSuperview()
             }
         } else {
             if let musicBackground = self.musicBackground {
