@@ -645,7 +645,8 @@ private final class PeerInfoScreenPersonalChannelItemNode: PeerInfoScreenItemNod
                     messageCount: nil,
                     hideSeparator: true,
                     hideDate: isLoading,
-                    hidePeerStatus: false
+                    hidePeerStatus: false,
+                    isInTransparentContainer: true
                 )
             )),
             editing: false,

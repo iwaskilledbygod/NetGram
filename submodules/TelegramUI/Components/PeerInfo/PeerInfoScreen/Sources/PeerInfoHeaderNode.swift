@@ -44,6 +44,7 @@ import PlainButtonComponent
 import BundleIconComponent
 import MarqueeComponent
 import EdgeEffect
+import GlassBackgroundComponent
 
 final class PeerInfoHeaderRegularContentNode: SparseNode {
     /// VoiceOver: the action buttons' container spans the header from its top, so the frame sort would read the buttons
@@ -185,12 +186,13 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         }
         return views
     }
-    /// The header's part of the page an expansion moves with the status, with the list (the prototype's actions and
-    /// music island): the buttons' container, which carries the buttons and their blur, whose mask draws the buttons'
-    /// platters and the music strip's (a platter moved on its own is clipped at the blur's frame, sized to the buttons'
-    /// row), and the music strip.
+    /// The header's part of the page an expansion moves with the status: the buttons' container and the music strip
+    /// and its platter.
     var expansionPageViews: [UIView] {
         var views: [UIView] = [self.buttonsContainerNode.view]
+        if let view = self.musicBackground {
+            views.append(view)
+        }
         if let view = self.music?.view {
             views.append(view)
         }
@@ -2717,22 +2719,46 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 }
                 let musicBackground = self.musicBackground ?? {
                     let musicBackground = UIView()
-                    musicBackground.backgroundColor = .white
-                    self.buttonsMaskView.addSubview(musicBackground)
+                    musicBackground.backgroundColor = .clear
+                    musicBackground.isUserInteractionEnabled = false
+                    self.regularContentNode.view.addSubview(musicBackground)
                     self.musicBackground = musicBackground
                     if transition.isAnimated {
                         musicBackground.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
                     }
                     return musicBackground
                 }()
-                musicTransition.updateFrame(view: musicBackground, frame: CGRect(origin: CGPoint(x: 0.0, y: backgroundHeight - 24.0 - buttonRightOrigin.y), size: CGSize(width: backgroundFrame.width, height: 24.0)))
-
+                let cardHorizontalInset: CGFloat = 18.0
+                let musicBandWidth = max(0.0, backgroundFrame.width - stripLeft - stripRight)
+                let cardSize = CGSize(width: max(0.0, musicBandWidth - cardHorizontalInset * 2.0), height: musicHeight)
+                let cardFrame = CGRect(
+                    origin: CGPoint(
+                        x: stripLeft + cardHorizontalInset,
+                        y: (apparentBackgroundHeight - backgroundHeight) + backgroundHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel
+                    ),
+                    size: cardSize
+                )
+                musicTransition.updateFrame(view: musicBackground, frame: cardFrame)
+                musicBackground.layer.masksToBounds = true
+                musicBackground.update(
+                    size: cardSize,
+                    cornerRadius: musicHeight * 0.5,
+                    isDark: presentationData.theme.overallDarkAppearance,
+                    tintColor: GlassBackgroundView.TintColor(
+                        kind: .custom(style: .default, color: UIColor(white: 1.0, alpha: presentationData.theme.overallDarkAppearance ? 0.10 : 0.18)),
+                        innerColor: UIColor(white: 1.0, alpha: 0.22),
+                        innerInset: 1.0
+                    ),
+                    isInteractive: false,
+                    transition: ComponentTransition(musicTransition)
+                )
                 musicTransition.updateAlpha(layer: musicBackground.layer, alpha: 1.0)
             } else if let musicBackground = self.musicBackground {
                 self.musicBackground = nil
+                musicBackground.layer.removeAllAnimations()
                 if transition.isAnimated {
-                    musicBackground.layer.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: { _ in
-                        musicBackground.removeFromSuperview()
+                    musicBackground.layer.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: { [weak musicBackground] _ in
+                        musicBackground?.removeFromSuperview()
                     })
                 } else {
                     musicBackground.removeFromSuperview()
@@ -2807,28 +2833,37 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 let musicFrame = CGRect(origin: CGPoint(x: stripLeft, y: (apparentBackgroundHeight - backgroundHeight) + backgroundHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel), size: musicSize)
                 if let musicView = music.view {
                     self.regularContentNode.accessibilityTrailingView = musicView
-                    if musicView.superview == nil {
+                    let wasAdded = musicView.superview == nil
+                    if wasAdded {
                         // A newly loaded strip item fades in at its final position.
+                        musicView.alpha = 0.0
                         ContainedViewLayoutTransition.immediate.updateFrame(view: musicView, frame: musicFrame)
                         self.regularContentNode.view.addSubview(musicView)
-                        if transition.isAnimated {
-                            musicView.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
-                        }
                     } else if additive {
                         musicTransition.updateFrameAdditiveToCenter(view: musicView, frame: musicFrame)
                     } else {
                         musicTransition.updateFrame(view: musicView, frame: musicFrame)
                     }
 
-                    ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeInOut).updateAlpha(layer: musicView.layer, alpha: backgroundBannerAlpha)
+                if self.musicBackground != nil {
+                    self.regularContentNode.view.bringSubviewToFront(musicView)
+                }
+
+
+                    if wasAdded && transition.isAnimated {
+                        musicView.layer.animateAlpha(from: 0.0, to: backgroundBannerAlpha, duration: 0.2)
+                    } else {
+                        ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeInOut).updateAlpha(layer: musicView.layer, alpha: backgroundBannerAlpha)
+                    }
                 }
             }
         } else {
             if let musicBackground = self.musicBackground {
                 self.musicBackground = nil
+                musicBackground.layer.removeAllAnimations()
                 if transition.isAnimated {
-                    musicBackground.layer.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: { _ in
-                        musicBackground.removeFromSuperview()
+                    musicBackground.layer.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: { [weak musicBackground] _ in
+                        musicBackground?.removeFromSuperview()
                     })
                 } else {
                     musicBackground.removeFromSuperview()

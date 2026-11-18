@@ -148,18 +148,9 @@ func infoItems(
             }))
         }
         if defaults.bool(forKey: "netgramShowUserDc") {
-            var dcId: Int?
-            if let cachedUserData = data.cachedData as? CachedUserData, case let .known(image) = cachedUserData.photo, let image = image {
-                for representation in image.representations {
-                    if let resource = representation.resource as? CloudPeerPhotoSizeMediaResource {
-                        dcId = resource.datacenterId
-                    }
-                }
-            }
-            if let dcId {
-                items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2997, label: "Data Center", text: "DC\(dcId)", textColor: .accent, action: nil, requestLayout: { _ in
-                }))
-            }
+            let dcId = context.account.masterDatacenterId
+            items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2997, label: "Data Center", text: "DC\(dcId)", textColor: .accent, action: nil, requestLayout: { _ in
+            }))
         }
 
         // NetGram: карточка личного канала объединена с карточкой информации — одна секция

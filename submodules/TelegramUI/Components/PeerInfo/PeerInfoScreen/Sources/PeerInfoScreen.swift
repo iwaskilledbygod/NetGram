@@ -5767,10 +5767,22 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                              
                 let sectionWidth = layout.size.width - insets.left - insets.right
 
-                // NetGram: единая карточка профиля — «жидкое стекло» с персональным цветом
+                // NetGram: a light glass surface softly follows the profile cover colors.
                 var glassTintColor: UIColor?
                 if !self.isSettings, let infoSectionId = sectionId.base as? InfoSection, infoSectionId == .peerInfo, let peer = self.data?.peer, case .user = peer, !self.state.isEditing {
-                    glassTintColor = peer.effectiveProfileColor.flatMap({ self.context.peerNameColors.getProfile($0, dark: self.presentationData.theme.overallDarkAppearance, subject: .palette).main })
+                    let coverColors: (UIColor, UIColor)?
+                    if let status = peer.emojiStatus, case let .starGift(_, _, _, _, _, innerColor, outerColor, _, _) = status.content {
+                        coverColors = (UIColor(rgb: UInt32(bitPattern: innerColor)), UIColor(rgb: UInt32(bitPattern: outerColor)))
+                    } else if let profileColor = peer.effectiveProfileColor {
+                        let colors = self.context.peerNameColors.getProfile(profileColor, dark: self.presentationData.theme.overallDarkAppearance)
+                        coverColors = (colors.main, colors.secondary ?? colors.main)
+                    } else {
+                        coverColors = nil
+                    }
+                    if let coverColors {
+                        let blendedCoverColor = coverColors.0.mixedWith(coverColors.1, alpha: 0.35)
+                        glassTintColor = UIColor(white: 1.0, alpha: 0.72).blitOver(blendedCoverColor, alpha: 1.0)
+                    }
                 }
                 if isFirstSection && sectionItems.first is PeerInfoScreenHeaderItem && !self.state.isEditing {
                     if self.data?.peer?.profileColor == nil && !self.headerNode.hasBottomStrip {

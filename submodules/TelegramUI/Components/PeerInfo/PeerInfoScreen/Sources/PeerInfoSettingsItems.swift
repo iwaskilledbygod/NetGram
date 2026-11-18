@@ -270,7 +270,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
     items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 3, text: presentationData.strings.Settings_Appearance, icon: PresentationResourcesSettings.appearance, action: {
         interaction.openSettings(.appearance)
     }))
-    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 7, text: "Customization", icon: PresentationResourcesSettings.appearance, action: {
+    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 7, text: "NetGram", icon: UIImage(bundleImageName: "NetBadge") ?? PresentationResourcesSettings.appearance, action: {
         interaction.openSettings(.customization)
     }))
     

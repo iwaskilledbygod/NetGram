@@ -137,7 +137,7 @@ private func customizationSettingsEntries(state: CustomizationState) -> [Customi
     entries.append(.showUserId(title: "Show user ID", value: state.showUserId))
     entries.append(.showUserIdInfo("Displays the unique numeric Telegram account identifier in the profile card, above the phone number."))
     entries.append(.showUserDc(title: "Show user DC", value: state.showUserDc))
-    entries.append(.showUserDcInfo("Displays the data center (DC) the account's media is stored on, in the profile card."))
+    entries.append(.showUserDcInfo("Displays the data center (DC) used by this Telegram account in the profile card."))
     return entries
 }
 
@@ -181,7 +181,7 @@ public func customizationSettingsController(context: AccountContext) -> ViewCont
     |> map { presentationData, state -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let entries = customizationSettingsEntries(state: state)
 
-        let controllerState = ItemListControllerState(presentationData: ItemListPresentationData(presentationData), title: .text("Customization"), leftNavigationButton: nil, rightNavigationButton: nil, backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back))
+        let controllerState = ItemListControllerState(presentationData: ItemListPresentationData(presentationData), title: .text("NetGram"), leftNavigationButton: nil, rightNavigationButton: nil, backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back))
         let listState = ItemListNodeState(presentationData: ItemListPresentationData(presentationData), entries: entries, style: .blocks)
 
         return (controllerState, (listState, arguments))
