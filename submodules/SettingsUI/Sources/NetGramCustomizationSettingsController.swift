@@ -122,8 +122,8 @@ private enum CustomizationEntry: ItemListNodeEntry {
 }
 
 private struct CustomizationState: Equatable {
-    let showUserId: Bool
-    let showUserDc: Bool
+    var showUserId: Bool
+    var showUserDc: Bool
 }
 
 private struct CustomizationArguments {
