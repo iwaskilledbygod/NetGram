@@ -46,7 +46,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         self.topSeparatorNode.isHidden = hasCorners
         self.bottomSeparatorNode.isHidden = hasCorners
 
-        if let glassTintColor {
+        if glassTintColor != nil {
             self.backgroundNode.backgroundColor = .clear
             self.topSeparatorNode.backgroundColor = .clear
             self.bottomSeparatorNode.backgroundColor = .clear
