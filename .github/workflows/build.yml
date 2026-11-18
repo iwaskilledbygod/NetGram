@@ -61,7 +61,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.8"
+          export BUILD_NUMBER="0.0.9"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -109,15 +109,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}
-          # Название: NetGram 13.2 (0.0.8). Перед запуском сборки обнови
+          # Название: NetGram 13.2 (0.0.9). Перед запуском сборки обнови
           # «Что нового» ниже — только изменения, видимые пользователю.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Карточка профиля объединена с карточкой личного канала и теперь выглядит как единая стеклянная панель, окрашенная в персональный цвет профиля.
-            - Настройки профиля NetGram показывают ID и Data Center текущего аккаунта; в карточке личного канала и музыкальной плашке применено оформление liquid glass.
+            - В настройках NetGram появился раздел «Profile» с переключателями оформления профиля.
+            - «Use new info card» объединяет сведения профиля в одну карточку и скрывает заголовок «CHANNEL» с числом подписчиков.
+            - «Use new music player» переключает стеклянную музыкальную плашку, «New buttons» делает кнопки профиля круглыми.
+            - «Show button name» показывает подписи под кнопками; пункт доступен только при включённых новых кнопках.
+            - «Show user ID» и «Show user DC» по-прежнему показывают ID аккаунта и Data Center в карточке профиля.
           draft: false
           prerelease: true
 
