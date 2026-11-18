@@ -61,7 +61,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.7"
+          export BUILD_NUMBER="0.0.8"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -108,8 +108,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}
-          # Название: NetGram 13.2 (0.0.7). Перед запуском сборки обнови
+          tag_name: build-${{ env.BUILD_NUMBER }}
+          # Название: NetGram 13.2 (0.0.8). Перед запуском сборки обнови
           # «Что нового» ниже — только изменения, видимые пользователю.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
