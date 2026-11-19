@@ -585,7 +585,9 @@ public final class PeerInfoCoverComponent: Component {
             
             let backgroundPatternContainerFrame = CGRect(origin: CGPoint(x: 0.0, y: availableSize.height), size: CGSize(width: availableSize.width, height: 0.0))
             transition.containedViewLayoutTransition.updateFrameAdditive(view: self.backgroundPatternContainer, frame: backgroundPatternContainerFrame)
-            transition.setAlpha(view: self.backgroundPatternContainer, alpha: component.patternTransitionFraction)
+            let hideCoverPattern = UserDefaults.standard.bool(forKey: "netgramHideCoverPattern")
+            transition.setAlpha(view: self.backgroundPatternContainer, alpha: hideCoverPattern ? 0.0 : component.patternTransitionFraction)
+            self.avatarBackgroundPatternContentsLayer.isHidden = hideCoverPattern
             
             var baseDistance: CGFloat = component.avatarSize.width / 2.0 + 22.0
             var baseRowDistance: CGFloat = 28.0

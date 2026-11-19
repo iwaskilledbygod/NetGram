@@ -5759,6 +5759,82 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     }
                     
                     strongSelf.updateLayout(size: CGSize(width: layout.contentSize.width, height: itemHeight), leftInset: params.leftInset, rightInset: params.rightInset)
+
+                    // NetGram: optional row element visibility, applied after the standard layout.
+                    if NetGramFeatures.enabled("HideListDate") {
+                        strongSelf.dateNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListDateDisclosure") {
+                        strongSelf.dateDisclosureIconView?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListStatusIcons") {
+                        strongSelf.dateStatusIconNode?.isHidden = true
+                        strongSelf.pinnedIconNode.isHidden = true
+                        strongSelf.secretIconNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListBadges") {
+                        strongSelf.badgeNode.isHidden = true
+                        strongSelf.avatarBadgeNode?.isHidden = true
+                        strongSelf.avatarBadgeBackground?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListMentionBadges") {
+                        strongSelf.mentionBadgeNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListOnlineDots") {
+                        strongSelf.onlineNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListVerifiedIcons") {
+                        strongSelf.verifiedIconView?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListCredibilityIcons") {
+                        strongSelf.credibilityIconView?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListStatusEmoji") {
+                        strongSelf.statusIconView?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListMuteIcons") {
+                        strongSelf.mutedIconNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListNetBadges") {
+                        strongSelf.netBadgeNode?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListTimerBadges") {
+                        strongSelf.avatarTimerBadge?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListLiveBadges") {
+                        strongSelf.avatarLiveBadge?.outline.isHidden = true
+                        strongSelf.avatarLiveBadge?.foreground.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListMediaPreviews") {
+                        for (_, previewNode) in strongSelf.mediaPreviewNodes {
+                            previewNode.isHidden = true
+                        }
+                    }
+                    if NetGramFeatures.enabled("HideListItemTags") {
+                        strongSelf.itemTagList?.view.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListAvatars") {
+                        strongSelf.avatarNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListTyping") {
+                        strongSelf.inputActivitiesNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListDustEffect") {
+                        strongSelf.dustNode?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("DimMutedChats") {
+                        strongSelf.mainContentContainerNode.alpha = isMuted ? 0.55 : 1.0
+                    }
+                    if NetGramFeatures.enabled("HideListSeparators") {
+                        strongSelf.separatorNode.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListStars") {
+                        strongSelf.starView?.isHidden = true
+                    }
+                    if NetGramFeatures.enabled("HideListOpenAppButton") {
+                        strongSelf.actionButtonTitleNode?.isHidden = true
+                        strongSelf.actionButtonBackgroundView?.isHidden = true
+                    }
                     
                     if item.editing {
                         strongSelf.setRevealOptions((left: [], right: []), enableAnimations: item.context.sharedContext.energyUsageSettings.fullTranslucency)

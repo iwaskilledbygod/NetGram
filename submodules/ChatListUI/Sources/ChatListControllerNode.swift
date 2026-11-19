@@ -2569,6 +2569,9 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
 }
 
 func shouldDisplayStoriesInChatListHeader(storySubscriptions: EngineStorySubscriptions, isHidden: Bool) -> Bool {
+    if NetGramFeatures.enabled("HideStoriesPanel") {
+        return false
+    }
     if !storySubscriptions.items.isEmpty {
         return true
     }

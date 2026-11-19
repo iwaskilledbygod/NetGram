@@ -383,7 +383,9 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
             self.glassContainerView.isHidden = false
             transition.updateFrame(view: self.glassContainerView, frame: visibleBackgroundFrame)
             transition.updateFrame(view: glassBackgroundView, frame: CGRect(origin: CGPoint(), size: visibleBackgroundFrame.size))
-            glassBackgroundView.update(size: visibleBackgroundFrame.size, cornerRadius: cornerRadius, isDark: presentationData.theme.overallDarkAppearance, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: backgroundColor.withAlphaComponent(presentationData.theme.overallDarkAppearance ? 0.36 : 0.28)), innerColor: backgroundColor.withAlphaComponent(0.34), innerInset: 1.0), transition: ComponentTransition(transition))
+            let glassColorAlpha: CGFloat = NetGramFeatures.enabled("TransparentButtons") ? (presentationData.theme.overallDarkAppearance ? 0.6 : 0.5) : (presentationData.theme.overallDarkAppearance ? 0.36 : 0.28)
+            let glassInnerAlpha: CGFloat = NetGramFeatures.enabled("TransparentButtons") ? 0.55 : 0.34
+            glassBackgroundView.update(size: visibleBackgroundFrame.size, cornerRadius: cornerRadius, isDark: presentationData.theme.overallDarkAppearance, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: backgroundColor.withAlphaComponent(glassColorAlpha)), innerColor: backgroundColor.withAlphaComponent(glassInnerAlpha), innerInset: 1.0), transition: ComponentTransition(transition))
         } else {
             self.glassContainerView.isHidden = true
             if let glassBackgroundView = self.glassBackgroundView {

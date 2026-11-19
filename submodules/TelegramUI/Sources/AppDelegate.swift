@@ -54,6 +54,139 @@ import WalletSendScreen
 import PasscodeCore
 import LiquidGlassShapes
 import MTProtoRustEngine
+import AVFoundation
+
+/// NetGram: keeps the app process alive in the background by playing a generated silent
+/// track in a loop. While the audio session stays active, iOS does not suspend the app,
+/// so the network stack keeps receiving updates and the app can raise notifications even
+/// without push certificates. Disabled by default.
+final class NetGramBackgroundKeepAlive {
+    static let shared = NetGramBackgroundKeepAlive()
+
+    private var player: AVAudioPlayer?
+    private var observers: [NSObjectProtocol] = []
+    private var batteryMonitoringEnabled = false
+
+    private var isEnabled: Bool {
+        return UserDefaults.standard.bool(forKey: "netgramBackgroundKeepAlive")
+    }
+
+    var isPlaying: Bool {
+        return self.player?.isPlaying ?? false
+    }
+
+    func startObserving() {
+        self.updateState()
+        self.observers.append(NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main, using: { [weak self] _ in
+            self?.updateState()
+        }))
+        self.observers.append(NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main, using: { [weak self] _ in
+            if NetGramFeatures.enabled("KeepAliveStopOnHeadphones"), self?.isEnabled == true {
+                self?.stop()
+            }
+        }))
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        self.batteryMonitoringEnabled = true
+        self.observers.append(NotificationCenter.default.addObserver(forName: UIDevice.batteryLevelDidChangeNotification, object: nil, queue: .main, using: { [weak self] _ in
+            self?.applyBatteryRule()
+        }))
+        self.applyBatteryRule()
+    }
+
+    private func applyBatteryRule() {
+        guard self.isEnabled, NetGramFeatures.enabled("KeepAliveStopOnLowBattery") else {
+            return
+        }
+        let device = UIDevice.current
+        if device.batteryState == .unplugged, device.batteryLevel >= 0.0, device.batteryLevel <= 0.1 {
+            self.stop()
+        }
+    }
+
+    func updateState() {
+        if self.isEnabled {
+            if !(self.player?.isPlaying ?? false) {
+                self.start()
+            }
+        } else {
+            self.stop()
+        }
+        self.setPlayingFlag(self.player?.isPlaying ?? false)
+    }
+
+    /// Writes the playing flag only when it actually changes, so the UserDefaults change
+    /// observers do not loop.
+    private func setPlayingFlag(_ playing: Bool) {
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: "netgramKeepAlivePlaying") != playing {
+            defaults.set(playing, forKey: "netgramKeepAlivePlaying")
+        }
+    }
+
+    private func start() {
+        guard let data = NetGramBackgroundKeepAlive.silenceData() else {
+            return
+        }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, options: [.mixWithOthers])
+            try session.setActive(true, options: [])
+            let player = try AVAudioPlayer(data: data, fileTypeHint: AVFileType.wav.rawValue)
+            player.numberOfLoops = -1
+            player.volume = 0.0
+            player.prepareToPlay()
+            player.play()
+            self.player = player
+        } catch {
+            self.player = nil
+        }
+    }
+
+    func stop() {
+        if let player = self.player {
+            player.stop()
+        }
+        self.player = nil
+        try? AVAudioSession.sharedInstance().setActive(false, options: [])
+        self.setPlayingFlag(false)
+    }
+
+    /// Builds a short mono 16-bit WAV file containing pure silence.
+    private static func silenceData() -> Data? {
+        let sampleRate = 22050
+        let seconds = 2
+        let sampleCount = sampleRate * seconds
+        let dataSize = sampleCount * 2
+        var data = Data()
+        func append(_ value: UInt32) {
+            var v = value.littleEndian
+            withUnsafeBytes(of: &v) { bytes in
+                data.append(contentsOf: bytes)
+            }
+        }
+        func append16(_ value: UInt16) {
+            var v = value.littleEndian
+            withUnsafeBytes(of: &v) { bytes in
+                data.append(contentsOf: bytes)
+            }
+        }
+        data.append(contentsOf: [0x52, 0x49, 0x46, 0x46]) // "RIFF"
+        append(UInt32(36 + dataSize))
+        data.append(contentsOf: [0x57, 0x41, 0x56, 0x45]) // "WAVE"
+        data.append(contentsOf: [0x66, 0x6D, 0x74, 0x20]) // "fmt "
+        append(16)
+        append16(1) // PCM
+        append16(1) // mono
+        append(UInt32(sampleRate))
+        append(UInt32(sampleRate * 2)) // byte rate
+        append16(2) // block align
+        append16(16) // bits per sample
+        data.append(contentsOf: [0x64, 0x61, 0x74, 0x61]) // "data"
+        append(UInt32(dataSize))
+        data.append(contentsOf: Data(repeating: 0, count: dataSize))
+        return data
+    }
+}
 
 #if DEBUG
 import AlertComponent
@@ -349,7 +482,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         precondition(!testIsLaunched)
         testIsLaunched = true
         CrashReportCollector.shared.start()
-        
+        NetGramBackgroundKeepAlive.shared.startObserving()
+
         let _ = voipTokenPromise.get().start(next: { token in
             self.voipDeviceToken.set(.single(token))
         })
@@ -2187,9 +2321,14 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         
         //cancelWindowPanGestures(view: self.mainWindow.hostView.containerView)
     }
-    
+
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        NetGramBackgroundKeepAlive.shared.updateState()
+    }
+
     func applicationWillTerminate(_ application: UIApplication) {
         Logger.shared.log("App \(self.episodeId)", "terminating")
+        NetGramBackgroundKeepAlive.shared.stop()
     }
     
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {

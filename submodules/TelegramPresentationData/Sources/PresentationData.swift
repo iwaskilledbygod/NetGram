@@ -970,3 +970,30 @@ public func themeDisplayName(strings: PresentationStrings, reference: Presentati
     }
     return name
 }
+
+/// NetGram feature flags: every customization lives behind a `netgram`-prefixed key and is
+/// disabled by default until the user enables it in NetGram settings.
+public enum NetGramFeatures {
+    public static func enabled(_ key: String) -> Bool {
+        return UserDefaults.standard.bool(forKey: "netgram" + key)
+    }
+
+    public static func integer(_ key: String) -> Int {
+        return UserDefaults.standard.integer(forKey: "netgram" + key)
+    }
+
+    public static func set(_ value: Bool, key: String) {
+        UserDefaults.standard.set(value, forKey: "netgram" + key)
+    }
+
+    public static func set(_ value: Int, key: String) {
+        UserDefaults.standard.set(value, forKey: "netgram" + key)
+    }
+
+    /// Logs the user out of the feature flag world gracefully: silences an event that is
+    /// only shown when the feature is enabled.
+    public static func optionTitle(_ key: String, options: [String]) -> String {
+        let index = max(0, min(options.count - 1, integer(key)))
+        return options[index]
+    }
+}

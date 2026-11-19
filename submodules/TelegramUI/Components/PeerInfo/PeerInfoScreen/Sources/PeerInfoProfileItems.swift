@@ -139,7 +139,7 @@ func infoItems(
             items[.unofficial]!.append(PeerInfoScreenInfoItem(id: 0, title: "", text: .plain(presentationData.strings.PeerInfo_UnofficialSecurityRisk(EnginePeer(user).compactDisplayTitle).string), style: .compact, linkAction: nil))
         }
         
-        if !callMessages.isEmpty {
+        if !callMessages.isEmpty && !NetGramFeatures.enabled("HideCallList") {
             items[.calls]!.append(PeerInfoScreenCallListItem(id: ItemCallList, messages: callMessages))
         }
         
@@ -177,7 +177,7 @@ func infoItems(
         }
 
         // NetGram: in the new card style the personal channel remains a row, without its section title/count.
-        if let personalChannel = data.personalChannel {
+        if let personalChannel = data.personalChannel, !NetGramFeatures.enabled("HidePersonalChannel") {
             let peerId = personalChannel.peer.peerId
             let defaults = UserDefaults.standard
             let useNewInfoCard = defaults.bool(forKey: "netgramUseNewInfoCard")
@@ -201,7 +201,7 @@ func infoItems(
             }))
         }
         
-        if let linkedCommunityData = data.linkedCommunityData {
+        if let linkedCommunityData = data.linkedCommunityData, !NetGramFeatures.enabled("HideCommunityRow") {
             items[.community]!.append(PeerInfoScreenCommunityItem(
                 id: ItemCommunity,
                 context: context,
@@ -225,9 +225,10 @@ func infoItems(
             } else {
                 label = presentationData.strings.ContactInfo_PhoneLabelMobile
             }
+            let copyPhoneOnHold = NetGramFeatures.enabled("PhoneCopyOnHold")
             items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: ItemPhoneNumber, label: label, text: formattedPhone, textColor: .accent, action: { node, progress in
                 interaction.openPhone(phone, node, nil, progress)
-            }, longTapAction: nil, contextAction: { node, gesture, _ in
+            }, longTapAction: nil, contextAction: copyPhoneOnHold ? makeCopyContextAction(formattedPhone, "Phone copied") : { node, gesture, _ in
                 interaction.openPhone(phone, node, gesture, nil)
             }, requestLayout: { animated in
                 interaction.requestLayout(animated)
@@ -258,7 +259,7 @@ func infoItems(
                         }
                     }, iconAction: {
                         interaction.openQrCode()
-                    }, contextAction: { node, gesture, _ in
+                    }, contextAction: NetGramFeatures.enabled("UsernameCopyOnHold") ? makeCopyContextAction("@\(mainUsername)", "Username copied") : { node, gesture, _ in
                         interaction.openUsernameContextMenu(node, gesture)
                     }, requestLayout: { animated in
                         interaction.requestLayout(animated)
@@ -268,7 +269,7 @@ func infoItems(
         }
         
         if let cachedData = data.cachedData as? CachedUserData {
-            if let birthday = cachedData.birthday {
+            if let birthday = cachedData.birthday, !NetGramFeatures.enabled("HideBirthdayRow") {
                 let isBirthdayToday = hasBirthdayToday(birthday: birthday)
                 
                 var birthdayAction: ((ASDisplayNode, Promise<Bool>?) -> Void)?
@@ -356,7 +357,7 @@ func infoItems(
                     })
                 }
                 
-                if hasAbout || hasWebApp || hasAgentKeyButton {
+                if (hasAbout || hasWebApp || hasAgentKeyButton) && !NetGramFeatures.enabled("HideAboutRow") {
                     var label: String = ""
                     if let about = cachedData.about, !about.isEmpty {
                         label = user.botInfo == nil ? presentationData.strings.Profile_About : presentationData.strings.Profile_BotInfo
@@ -368,7 +369,7 @@ func infoItems(
                     }))
                 }
                 
-                if let note = cachedData.note, !note.text.isEmpty {
+                if let note = cachedData.note, !note.text.isEmpty, !NetGramFeatures.enabled("HideNoteRow") {
                     var entities = note.entities
                     if context.isPremium {
                         entities = generateTextEntities(note.text, enabledTypes: [.mention, .hashtag, .allUrl], currentEntities: entities)
@@ -390,7 +391,7 @@ func infoItems(
                     }))
                     
                     currentPeerInfoSection = .peerInfoTrailing
-                } else if actionButton != nil {
+                } else if actionButton != nil && !NetGramFeatures.enabled("HideAppFooterRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenCommentItem(id: ItemAppFooter, text: presentationData.strings.PeerInfo_AppFooter, linkAction: { action in
                         if case let .tap(url) = action {
                             context.sharedContext.applicationBindings.openUrl(url)
@@ -424,7 +425,7 @@ func infoItems(
                 
                 if let botInfo = user.botInfo, botInfo.flags.contains(.canEdit) {
                 } else {
-                    if let starRefProgram = cachedData.starRefProgram, starRefProgram.endDate == nil {
+                    if let starRefProgram = cachedData.starRefProgram, starRefProgram.endDate == nil, !NetGramFeatures.enabled("HideAffiliateRow") {
                         var canJoinRefProgram = false
                         if let data = context.currentAppConfiguration.with({ $0 }).data, let value = data["starref_connect_allowed"] {
                             if let value = value as? Double {
@@ -449,13 +450,13 @@ func infoItems(
                 }
             }
             
-            if let businessHours = cachedData.businessHours {
+            if let businessHours = cachedData.businessHours, !NetGramFeatures.enabled("HideBusinessHoursRow") {
                 items[currentPeerInfoSection]!.append(PeerInfoScreenBusinessHoursItem(id: ItemBusinessHours, label: presentationData.strings.PeerInfo_BusinessHours_Label, businessHours: businessHours, requestLayout: { animated in
                     interaction.requestLayout(animated)
                 }, longTapAction: nil, contextAction: workingHoursContextAction))
             }
-            
-            if let businessLocation = cachedData.businessLocation {
+
+            if let businessLocation = cachedData.businessLocation, !NetGramFeatures.enabled("HideLocationRow") {
                 if let coordinates = businessLocation.coordinates {
                     let imageSignal = chatMapSnapshotImage(engine: context.engine, resource: MapSnapshotMediaResource(latitude: coordinates.latitude, longitude: coordinates.longitude, width: 90, height: 90))
                     items[currentPeerInfoSection]!.append(PeerInfoScreenAddressItem(
@@ -482,14 +483,14 @@ func infoItems(
         }
         
         if !isMyProfile {
-            if !data.isContact, user.botInfo == nil {
+            if !data.isContact, user.botInfo == nil, !NetGramFeatures.enabled("HideAddToContactsRow") {
                 items[currentPeerInfoSection]!.append(PeerInfoScreenActionItem(id: ItemAddToContacts, text: presentationData.strings.PeerInfo_AddToContacts, action: {
                     interaction.openAddContact()
                 }))
             }
 
             if let reactionSourceMessageId = reactionSourceMessageId {
-                if canDeleteReaction {
+                if canDeleteReaction && !NetGramFeatures.enabled("HideDeleteReactionRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenActionItem(id: ItemDeleteReaction, text: presentationData.strings.PeerInfo_DeleteReaction, color: .destructive, action: {
                         interaction.openDeleteReaction(reactionSourceMessageId)
                     }))
@@ -503,14 +504,14 @@ func infoItems(
                     isBlocked = true
                 }
                 
-                if isBlocked {
+                if isBlocked && !NetGramFeatures.enabled("HideBlockRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenActionItem(id: ItemBlock, text: user.botInfo != nil ? presentationData.strings.Bot_Unblock : presentationData.strings.Conversation_Unblock, action: {
                         interaction.updateBlocked(false)
                     }))
                 } else {
                     if user.flags.contains(.isSupport) || data.isContact {
                     } else {
-                        if user.botInfo == nil {
+                        if user.botInfo == nil && !NetGramFeatures.enabled("HideBlockRow") {
                             items[currentPeerInfoSection]!.append(PeerInfoScreenActionItem(id: ItemBlock, text: presentationData.strings.Conversation_BlockUser, color: .destructive, action: {
                                 interaction.updateBlocked(true)
                             }))
@@ -524,13 +525,13 @@ func infoItems(
                 if let chatPeer = data.chatPeer, case .secretChat = chatPeer {
                     isSecretChat = true
                 }
-                if !peerInfoUserHeaderHasMore(user, isSecretChat: isSecretChat, isContact: data.isContact) && peerInfoCanReportUser(user, accountPeerId: context.account.peerId) {
+                if !peerInfoUserHeaderHasMore(user, isSecretChat: isSecretChat, isContact: data.isContact) && peerInfoCanReportUser(user, accountPeerId: context.account.peerId) && !NetGramFeatures.enabled("HideReportRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenActionItem(id: ItemReport, text: presentationData.strings.ReportPeer_Report, action: {
                         interaction.openReport(.default)
                     }))
                 }
                 
-                if let encryptionKeyFingerprint = data.encryptionKeyFingerprint {
+                if let encryptionKeyFingerprint = data.encryptionKeyFingerprint, !NetGramFeatures.enabled("HideEncryptionKeyRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenDisclosureEncryptionKeyItem(id: ItemEncryptionKey, text: presentationData.strings.Profile_EncryptionKey, fingerprint: encryptionKeyFingerprint, action: {
                         interaction.openEncryptionKey()
                     }))
@@ -542,7 +543,7 @@ func infoItems(
                 let starsBalance = data.starsRevenueStatsState?.balances.currentBalance.amount ?? StarsAmount.zero
                 let overallStarsBalance = data.starsRevenueStatsState?.balances.overallRevenue.amount ?? StarsAmount.zero
                 
-                if overallRevenueBalance > 0 || overallStarsBalance > StarsAmount.zero {
+                if (overallRevenueBalance > 0 || overallStarsBalance > StarsAmount.zero) && !NetGramFeatures.enabled("HideBotBalanceRows") {
                     items[.balances]!.append(PeerInfoScreenHeaderItem(id: ItemBalanceHeader, text: presentationData.strings.PeerInfo_BotBalance_Title))
                     if overallRevenueBalance > 0 {
                         let string = "*\(formatTonAmountText(revenueBalance, dateTimeFormat: presentationData.dateTimeFormat))"
@@ -574,7 +575,7 @@ func infoItems(
                     }
                 }
                 
-                if let _ = user.botInfo {
+                if let _ = user.botInfo, !NetGramFeatures.enabled("HideBotPermissions") {
                     var canManageEmojiStatus = false
                     if let cachedData = data.cachedData as? CachedUserData, cachedData.flags.contains(.botCanManageEmojiStatus) {
                         canManageEmojiStatus = true
@@ -607,13 +608,13 @@ func infoItems(
                     }
                 }
                 
-                if let botInfo = user.botInfo, botInfo.flags.contains(.canEdit) {
+                if let botInfo = user.botInfo, botInfo.flags.contains(.canEdit), !NetGramFeatures.enabled("HideBotSettingsRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenDisclosureItem(id: ItemBotSettings, label: .none, text: presentationData.strings.Bot_Settings, icon: PresentationResourcesSettings.settings, action: {
                         interaction.openEditing()
                     }))
                 }
                 
-                if let botInfo = user.botInfo, !botInfo.flags.contains(.canEdit) {
+                if let botInfo = user.botInfo, !botInfo.flags.contains(.canEdit), !NetGramFeatures.enabled("HideBotReportRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenActionItem(id: ItemBotReport, text: presentationData.strings.ReportPeer_Report, action: {
                         interaction.openReport(.default)
                     }))
@@ -630,7 +631,7 @@ func infoItems(
                     }))
                 }
 
-                if let verification = (data.cachedData as? CachedUserData)?.verification {
+                if let verification = (data.cachedData as? CachedUserData)?.verification, !NetGramFeatures.enabled("HideVerificationRow") {
                     let attributedPrefix = NSMutableAttributedString(string: "  ")
                     attributedPrefix.addAttribute(ChatTextInputAttributes.customEmoji, value: ChatTextInputTextCustomEmojiAttribute(interactivelySelectedFromPackId: nil, fileId: verification.iconFileId, file: nil), range: NSMakeRange(0, 1))
                     
@@ -639,7 +640,7 @@ func infoItems(
                             context.sharedContext.openExternalUrl(context: context, urlContext: .generic, url: url, forceExternal: false, presentationData: presentationData, navigationController: navigationController, dismissInput: {})
                         }
                     }))
-                } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
+                } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups), !NetGramFeatures.enabled("HideBotAddToChatRow") {
                     items[currentPeerInfoSection]!.append(PeerInfoScreenActionItem(id: ItemBotAddToChat, text: presentationData.strings.Bot_AddToChat, color: .accent, action: {
                         interaction.openAddBotToGroup()
                     }))

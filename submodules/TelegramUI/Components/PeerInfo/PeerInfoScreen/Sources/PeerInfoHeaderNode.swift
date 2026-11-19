@@ -238,6 +238,9 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         guard let peer, peer.id != self.context.account.peerId || self.isMyProfile, let screenData else {
             return nil
         }
+        if NetGramFeatures.enabled("HideSavedMusic") {
+            return nil
+        }
         let list = screenData.savedMusicState.map { state -> (files: [TelegramMediaFile], isLoading: Bool) in
             return (state.files, state.dataState == .loading)
         }
@@ -703,7 +706,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         
         let currentSavedMusic = self.profileMusic(peer: peer, screenData: screenData)
         let currentWalletBalance: Int64?
-        if !self.isSettings, let balance = (screenData?.cachedData as? CachedUserData)?.walletCard?.balance, balance >= 100_000_000 {
+        if !self.isSettings, !NetGramFeatures.enabled("HideWalletPill"), let balance = (screenData?.cachedData as? CachedUserData)?.walletCard?.balance, balance >= (NetGramFeatures.enabled("AlwaysShowBalance") ? 0 : 100_000_000) {
             currentWalletBalance = balance
         } else {
             currentWalletBalance = nil
@@ -735,14 +738,14 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 credibilityIcon = .fake
             } else if peer.isScam {
                 credibilityIcon = .scam
-            } else if let emojiStatus = peer.emojiStatus {
+            } else if let emojiStatus = peer.emojiStatus, !NetGramFeatures.enabled("HideEmojiStatus") {
                 statusIcon = .emojiStatus(emojiStatus)
-            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && (peer.id != self.context.account.peerId || self.isSettings || self.isMyProfile) {
+            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && !NetGramFeatures.enabled("HidePremiumBadge") && (peer.id != self.context.account.peerId || self.isSettings || self.isMyProfile) {
                 credibilityIcon = .premium
             } else {
                 credibilityIcon = .none
             }
-            if peer.isVerified {
+            if peer.isVerified && !NetGramFeatures.enabled("HideVerifiedIcon") {
                 credibilityIcon = .verified
             }
             if let verificationIconFileId = peer.verificationIconFileId {
@@ -754,8 +757,11 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         if case let .channel(channel) = peer, channel.isForumOrMonoForum {
             isForum = true
         }
-        
-        transition.updateAlpha(node: self.regularContentNode, alpha: (state.isEditing || self.customNavigationContentNode != nil) ? 0.0 : 1.0)
+
+        self.titleNodeContainer.isHidden = NetGramFeatures.enabled("HideProfileTitle")
+        self.subtitleNodeContainer.isHidden = NetGramFeatures.enabled("HideProfileSubtitle")
+
+        transition.updateAlpha(node: self.regularContentNode, alpha: (state.isEditing || self.customNavigationContentNode != nil) ? 0.0 : (NetGramFeatures.enabled("DimProfileHeader") ? 0.82 : 1.0))
         self.updateNavigationRowHidden?(self.customNavigationContentNode != nil || isSearching, transition)
         
         self.editingContentNode.alpha = state.isEditing ? 1.0 : 0.0
@@ -2272,7 +2278,8 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         
         let buttonsTransitionFraction: CGFloat = 1.0 - max(0.0, min(1.0, buttonsTransitionDistance / buttonsTransitionDistanceNorm))
         
-        let buttonSpacing: CGFloat = 8.0
+        let buttonSpacings: [CGFloat] = [8.0, 12.0, 4.0]
+        let buttonSpacing: CGFloat = buttonSpacings[max(0, min(2, NetGramFeatures.integer("ButtonsSpacing")))]
         let buttonSideInset = max(16.0, containerInset)
         
         let actionButtonWidth = (width - stripLeft - stripRight - buttonSideInset * 2.0 + buttonSpacing) / CGFloat(actionButtonKeys.count) - buttonSpacing
@@ -2334,7 +2341,8 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         let useNewButtons = UserDefaults.standard.bool(forKey: "netgramUseNewButtons")
         let showButtonName = UserDefaults.standard.bool(forKey: "netgramShowButtonName")
         let buttonWidth = (width - stripLeft - stripRight - buttonSideInset * 2.0 + buttonSpacing) / CGFloat(buttonKeys.count) - buttonSpacing
-        let buttonSize = CGSize(width: buttonWidth, height: useNewButtons ? (showButtonName ? 90.0 : 72.0) : 58.0)
+        let buttonHeightBase: CGFloat = [72.0, 80.0, 88.0][max(0, min(2, NetGramFeatures.integer("ButtonSizeStyle")))]
+        let buttonSize = CGSize(width: buttonWidth, height: useNewButtons ? (showButtonName ? buttonHeightBase + 18.0 : buttonHeightBase) : 58.0)
         var buttonRightOrigin = CGPoint(x: width - stripRight - buttonSideInset, y: backgroundHeight - bottomInset - 10.0 - buttonSize.height)
         if !actionButtonKeys.isEmpty {
             buttonRightOrigin.y += actionButtonSize.height + 24.0
@@ -2754,7 +2762,9 @@ final class PeerInfoHeaderNode: ASDisplayNode {
 
         if currentSavedMusic != nil {
             var musicTransition = transition
-            if useNewMusicPlayer && (hasBackground || self.isAvatarExpanded) {
+            let isOverlay = self.isAvatarExpanded || hasBackground
+            let musicOverlay = (useNewMusicPlayer && isOverlay) || (useNewMusicPlayer && NetGramFeatures.enabled("MusicCapsuleGlass"))
+            if musicOverlay {
                 if self.musicBackground == nil {
                     musicTransition = .immediate
                     let musicBackground = GlassBackgroundView()
@@ -2778,11 +2788,10 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 }
             }
 
-            let isOverlay = self.isAvatarExpanded || hasBackground
-            let musicOverlay = useNewMusicPlayer && isOverlay
             // The new player renders as a compact capsule that hangs in the air instead of
             // stretching across the whole band.
-            let musicCapsuleHeight: CGFloat = musicOverlay ? 32.0 : musicHeight
+            let capsuleHeights: [CGFloat] = [32.0, 38.0, 44.0]
+            let musicCapsuleHeight: CGFloat = musicOverlay ? capsuleHeights[max(0, min(2, NetGramFeatures.integer("MusicCapsuleSize")))] : musicHeight
             let stripSecondaryColor = hasCoverColor && musicOverlay ? navigationContentsSecondaryColor.mixedWith(.white, alpha: 0.45) : navigationContentsSecondaryColor
             let musicBandWidth = max(0.0, backgroundFrame.width - stripLeft - stripRight)
             if let currentSavedMusic {
@@ -2811,7 +2820,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
 
                 let musicString = NSMutableAttributedString()
                 // Keep music inside the profile band, including when a side strip is visible.
-                musicString.append(NSAttributedString(string: track ?? "", font: Font.semibold(12.0), textColor: useNewMusicPlayer && isOverlay ? .white : presentationData.theme.list.itemAccentColor))
+                musicString.append(NSAttributedString(string: track ?? "", font: Font.semibold(12.0), textColor: musicOverlay ? .white : presentationData.theme.list.itemAccentColor))
                 let artistSeparatorIndex = musicString.length
                 musicString.append(NSAttributedString(string: " \(artist)", font: Font.regular(12.0), textColor: stripSecondaryColor))
                 musicString.addAttribute(.kern, value: CGFloat(2.0), range: NSRange(location: artistSeparatorIndex, length: 1))
@@ -2824,7 +2833,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                                 HStack([
                                     AnyComponentWithIdentity(
                                         id: "icon",
-                                        component: AnyComponent(BundleIconComponent(name: "Media Editor/SmallAudio", tintColor: isOverlay ? .white : presentationData.theme.list.itemAccentColor))
+                                        component: AnyComponent(BundleIconComponent(name: "Media Editor/SmallAudio", tintColor: musicOverlay ? .white : presentationData.theme.list.itemAccentColor))
                                     ),
                                     AnyComponentWithIdentity(
                                         id: "label",
@@ -2851,10 +2860,11 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 let musicFrame: CGRect
                 if musicOverlay {
                     // A free-floating capsule, centred above the bottom edge of the band.
+                    let capsuleOffsets: [CGFloat] = [10.0, 6.0, 16.0]
                     musicFrame = CGRect(
                         origin: CGPoint(
                             x: stripLeft + floor((width - stripLeft - stripRight - musicSize.width) * 0.5),
-                            y: musicLayoutHeight - musicCapsuleHeight - 10.0
+                            y: musicLayoutHeight - musicCapsuleHeight - capsuleOffsets[max(0, min(2, NetGramFeatures.integer("MusicCapsuleOffset")))]
                         ),
                         size: musicSize
                     )
@@ -2864,6 +2874,16 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 if let musicBackground = self.musicBackground {
                     musicTransition.updateFrame(view: musicBackground, frame: musicFrame)
                     musicBackground.layer.masksToBounds = true
+                    if NetGramFeatures.enabled("MusicCapsuleShadow") {
+                        musicBackground.layer.shadowColor = UIColor.black.cgColor
+                        musicBackground.layer.shadowOpacity = 0.3
+                        musicBackground.layer.shadowRadius = 10.0
+                        musicBackground.layer.shadowOffset = CGSize(width: 0.0, height: 4.0)
+                        musicBackground.layer.shadowPath = UIBezierPath(roundedRect: CGRect(origin: CGPoint(), size: musicFrame.size), cornerRadius: musicFrame.height * 0.5).cgPath
+                    } else {
+                        musicBackground.layer.shadowOpacity = 0.0
+                        musicBackground.layer.shadowPath = nil
+                    }
                     musicBackground.update(
                         size: musicFrame.size,
                         cornerRadius: musicFrame.height * 0.5,
