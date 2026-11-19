@@ -13,6 +13,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
     private let bottomSeparatorNode: ASDisplayNode
     private let itemContainerNode: ASDisplayNode
     private var glassBackgroundView: GlassBackgroundView?
+    private var profileBackdropView: PeerInfoProfileBackdropGradientView?
     
     private var currentItems: [PeerInfoScreenItem] = []
     var itemNodes: [AnyHashable: PeerInfoScreenItemNode] = [:]
@@ -38,7 +39,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         self.addSubnode(self.bottomSeparatorNode)
     }
     
-    func update(context: AccountContext, width: CGFloat, safeInsets: UIEdgeInsets, hasCorners: Bool, presentationData: PresentationData, items: [PeerInfoScreenItem], transition: ContainedViewLayoutTransition, glassTintColor: UIColor? = nil) -> CGFloat {
+    func update(context: AccountContext, width: CGFloat, safeInsets: UIEdgeInsets, hasCorners: Bool, presentationData: PresentationData, items: [PeerInfoScreenItem], transition: ContainedViewLayoutTransition, glassTintColor: UIColor? = nil, profileBackdropColor: UIColor? = nil, profileBackdropMode: Int = 0, profileBackdropTopExtension: CGFloat = 0.0) -> CGFloat {
         self.backgroundNode.backgroundColor = presentationData.theme.list.itemBlocksBackgroundColor
         self.topSeparatorNode.backgroundColor = presentationData.theme.list.itemBlocksSeparatorColor
         self.bottomSeparatorNode.backgroundColor = presentationData.theme.list.itemBlocksSeparatorColor
@@ -46,8 +47,24 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         self.topSeparatorNode.isHidden = hasCorners
         self.bottomSeparatorNode.isHidden = hasCorners
 
+        if let profileBackdropColor {
+            let backdropView: PeerInfoProfileBackdropGradientView
+            if let current = self.profileBackdropView {
+                backdropView = current
+            } else {
+                backdropView = PeerInfoProfileBackdropGradientView(frame: CGRect())
+                self.profileBackdropView = backdropView
+                self.view.insertSubview(backdropView, belowSubview: self.itemContainerNode.view)
+            }
+            self.view.sendSubviewToBack(backdropView)
+            backdropView.isHidden = false
+        } else if let profileBackdropView = self.profileBackdropView {
+            profileBackdropView.removeFromSuperview()
+            self.profileBackdropView = nil
+        }
+
         if glassTintColor != nil {
-            self.backgroundNode.backgroundColor = .clear
+            self.backgroundNode.backgroundColor = profileBackdropMode == 1 ? (profileBackdropColor ?? .clear) : .clear
             self.topSeparatorNode.backgroundColor = .clear
             self.bottomSeparatorNode.backgroundColor = .clear
 
@@ -145,6 +162,13 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         }
         
         transition.updateFrame(node: self.itemContainerNode, frame: CGRect(origin: CGPoint(), size: CGSize(width: width, height: contentHeight)))
+        let sectionBackgroundColor: UIColor
+        if profileBackdropMode == 1, let profileBackdropColor {
+            sectionBackgroundColor = profileBackdropColor
+        } else {
+            sectionBackgroundColor = presentationData.theme.list.itemBlocksBackgroundColor
+        }
+        self.backgroundNode.backgroundColor = sectionBackgroundColor
         transition.updateFrame(node: self.backgroundNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset), size: CGSize(width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset))))
         transition.updateFrame(node: self.topSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset - UIScreenPixel), size: CGSize(width: width, height: UIScreenPixel)))
         transition.updateFrame(node: self.bottomSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundHeight), size: CGSize(width: width, height: UIScreenPixel)))
@@ -156,6 +180,32 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
             componentTransition.setCornerRadius(layer: glassBackgroundView.layer, cornerRadius: 20.0)
             let dark = presentationData.theme.overallDarkAppearance
             glassBackgroundView.update(size: glassFrame.size, cornerRadius: 20.0, isDark: dark, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: glassTintColor ?? UIColor(white: 0.5, alpha: 1.0)), innerColor: nil, innerInset: 3.0), transition: componentTransition)
+        }
+        if let profileBackdropColor, let profileBackdropView = self.profileBackdropView {
+            let backdropFrame: CGRect
+            switch profileBackdropMode {
+            case 0:
+                backdropFrame = CGRect(x: 0.0, y: contentWithBackgroundOffset, width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset))
+            case 1:
+                backdropFrame = CGRect(x: 0.0, y: contentWithBackgroundOffset, width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset))
+            default:
+                let topExtension = min(profileBackdropTopExtension, contentWithBackgroundOffset)
+                backdropFrame = CGRect(x: 0.0, y: contentWithBackgroundOffset - topExtension, width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset) + topExtension)
+            }
+            profileBackdropView.frame = backdropFrame
+            profileBackdropView.update(size: backdropFrame.size, color: profileBackdropColor, backgroundColor: presentationData.theme.list.itemBlocksBackgroundColor)
+            if profileBackdropMode == 2 {
+                profileBackdropView.layer.mask = nil
+                let mask = CAGradientLayer()
+                mask.frame = profileBackdropView.bounds
+                mask.startPoint = CGPoint(x: 0.5, y: 0.0)
+                mask.endPoint = CGPoint(x: 0.5, y: 1.0)
+                mask.colors = [UIColor.black.cgColor, UIColor.black.cgColor, UIColor.clear.cgColor]
+                mask.locations = [0.0, 0.4, 1.0]
+                profileBackdropView.layer.mask = mask
+            } else {
+                profileBackdropView.layer.mask = nil
+            }
         }
         
         if contentHeight.isZero {

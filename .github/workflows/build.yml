@@ -61,7 +61,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.10"
+          export BUILD_NUMBER="0.0.11"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -109,16 +109,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}
-          # Название релиза и «Что нового» обновлены для NetGram 0.0.10.
+          # Название релиза и «Что нового» обновлены для NetGram 0.0.11.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Настройки оформления профиля вынесены в отдельный экран NetGram → Profile.
+            - Профиль получил три режима оформления фона секции «Об аккаунте» и настраиваемый цвет из фотографии аватара.
+            - Кнопки действий в новом виде профиля оформлены в стиле Liquid Glass.
             - Для строк User ID и Data Center добавлено контекстное меню копирования.
             - Исправлено положение и оформление музыкальной карточки; при выключении нового плеера возвращается исходный вид.
-            - Уменьшена лишняя работа при анимации круглых кнопок и их подписей.
             - Новый вид карточки информации включён по умолчанию.
           draft: false
           prerelease: true

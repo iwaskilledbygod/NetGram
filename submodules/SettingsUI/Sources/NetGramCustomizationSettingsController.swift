@@ -33,6 +33,14 @@ private enum CustomizationEntry: ItemListNodeEntry {
         case newButtonsInfo
         case showButtonName
         case showButtonNameInfo
+        case profileBackdropUnderCard
+        case profileBackdropUnderCardInfo
+        case profileBackdropWholeSection
+        case profileBackdropWholeSectionInfo
+        case profileBackdropTransition
+        case profileBackdropTransitionInfo
+        case profileBackdropAvatarColorFallback
+        case profileBackdropAvatarColorFallbackInfo
     }
 
     case profileHeader(String)
@@ -49,6 +57,14 @@ private enum CustomizationEntry: ItemListNodeEntry {
     case newButtonsInfo(String)
     case showButtonName(title: String, value: Bool)
     case showButtonNameInfo(String)
+    case profileBackdropUnderCard(title: String, value: Bool)
+    case profileBackdropUnderCardInfo(String)
+    case profileBackdropWholeSection(title: String, value: Bool)
+    case profileBackdropWholeSectionInfo(String)
+    case profileBackdropTransition(title: String, value: Bool)
+    case profileBackdropTransitionInfo(String)
+    case profileBackdropAvatarColorFallback(title: String, value: Bool)
+    case profileBackdropAvatarColorFallbackInfo(String)
 
     var section: ItemListSectionId { CustomizationSection.profile.rawValue }
 
@@ -68,6 +84,14 @@ private enum CustomizationEntry: ItemListNodeEntry {
         case .newButtonsInfo: return .newButtonsInfo
         case .showButtonName: return .showButtonName
         case .showButtonNameInfo: return .showButtonNameInfo
+        case .profileBackdropUnderCard: return .profileBackdropUnderCard
+        case .profileBackdropUnderCardInfo: return .profileBackdropUnderCardInfo
+        case .profileBackdropWholeSection: return .profileBackdropWholeSection
+        case .profileBackdropWholeSectionInfo: return .profileBackdropWholeSectionInfo
+        case .profileBackdropTransition: return .profileBackdropTransition
+        case .profileBackdropTransitionInfo: return .profileBackdropTransitionInfo
+        case .profileBackdropAvatarColorFallback: return .profileBackdropAvatarColorFallback
+        case .profileBackdropAvatarColorFallbackInfo: return .profileBackdropAvatarColorFallbackInfo
         }
     }
 
@@ -86,14 +110,22 @@ private enum CustomizationEntry: ItemListNodeEntry {
         case .newButtonsInfo: return 10
         case .showButtonName: return 11
         case .showButtonNameInfo: return 12
+        case .profileBackdropUnderCard: return 13
+        case .profileBackdropUnderCardInfo: return 14
+        case .profileBackdropWholeSection: return 15
+        case .profileBackdropWholeSectionInfo: return 16
+        case .profileBackdropTransition: return 17
+        case .profileBackdropTransitionInfo: return 18
+        case .profileBackdropAvatarColorFallback: return 19
+        case .profileBackdropAvatarColorFallbackInfo: return 20
         }
     }
 
     static func ==(lhs: CustomizationEntry, rhs: CustomizationEntry) -> Bool {
         switch (lhs, rhs) {
-        case let (.profileHeader(a), .profileHeader(b)), let (.profileDisclosure(a), .profileDisclosure(b)), let (.showUserIdInfo(a), .showUserIdInfo(b)), let (.showUserDcInfo(a), .showUserDcInfo(b)), let (.newMusicInfo(a), .newMusicInfo(b)), let (.newInfoCardInfo(a), .newInfoCardInfo(b)), let (.newButtonsInfo(a), .newButtonsInfo(b)), let (.showButtonNameInfo(a), .showButtonNameInfo(b)):
+        case let (.profileHeader(a), .profileHeader(b)), let (.profileDisclosure(a), .profileDisclosure(b)), let (.showUserIdInfo(a), .showUserIdInfo(b)), let (.showUserDcInfo(a), .showUserDcInfo(b)), let (.newMusicInfo(a), .newMusicInfo(b)), let (.newInfoCardInfo(a), .newInfoCardInfo(b)), let (.newButtonsInfo(a), .newButtonsInfo(b)), let (.showButtonNameInfo(a), .showButtonNameInfo(b)), let (.profileBackdropUnderCardInfo(a), .profileBackdropUnderCardInfo(b)), let (.profileBackdropWholeSectionInfo(a), .profileBackdropWholeSectionInfo(b)), let (.profileBackdropTransitionInfo(a), .profileBackdropTransitionInfo(b)), let (.profileBackdropAvatarColorFallbackInfo(a), .profileBackdropAvatarColorFallbackInfo(b)):
             return a == b
-        case let (.showUserId(a, av), .showUserId(b, bv)), let (.showUserDc(a, av), .showUserDc(b, bv)), let (.newMusic(a, av), .newMusic(b, bv)), let (.newInfoCard(a, av), .newInfoCard(b, bv)), let (.newButtons(a, av), .newButtons(b, bv)), let (.showButtonName(a, av), .showButtonName(b, bv)):
+        case let (.showUserId(a, av), .showUserId(b, bv)), let (.showUserDc(a, av), .showUserDc(b, bv)), let (.newMusic(a, av), .newMusic(b, bv)), let (.newInfoCard(a, av), .newInfoCard(b, bv)), let (.newButtons(a, av), .newButtons(b, bv)), let (.showButtonName(a, av), .showButtonName(b, bv)), let (.profileBackdropUnderCard(a, av), .profileBackdropUnderCard(b, bv)), let (.profileBackdropWholeSection(a, av), .profileBackdropWholeSection(b, bv)), let (.profileBackdropTransition(a, av), .profileBackdropTransition(b, bv)), let (.profileBackdropAvatarColorFallback(a, av), .profileBackdropAvatarColorFallback(b, bv)):
             return a == b && av == bv
         default:
             return false
@@ -133,6 +165,22 @@ private enum CustomizationEntry: ItemListNodeEntry {
             return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: title, value: value, sectionId: self.section, style: .blocks, updated: arguments.toggleButtonName)
         case let .showButtonNameInfo(text):
             return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
+        case let .profileBackdropUnderCard(title, value):
+            return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: title, value: value, sectionId: self.section, style: .blocks, updated: arguments.toggleProfileBackdropUnderCard)
+        case let .profileBackdropUnderCardInfo(text):
+            return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
+        case let .profileBackdropWholeSection(title, value):
+            return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: title, value: value, sectionId: self.section, style: .blocks, updated: arguments.toggleProfileBackdropWholeSection)
+        case let .profileBackdropWholeSectionInfo(text):
+            return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
+        case let .profileBackdropTransition(title, value):
+            return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: title, value: value, sectionId: self.section, style: .blocks, updated: arguments.toggleProfileBackdropTransition)
+        case let .profileBackdropTransitionInfo(text):
+            return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
+        case let .profileBackdropAvatarColorFallback(title, value):
+            return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: title, value: value, sectionId: self.section, style: .blocks, updated: arguments.toggleProfileBackdropAvatarColorFallback)
+        case let .profileBackdropAvatarColorFallbackInfo(text):
+            return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
         }
     }
 }
@@ -144,6 +192,10 @@ private struct CustomizationState: Equatable {
     var useNewInfoCard: Bool
     var useNewButtons: Bool
     var showButtonName: Bool
+    var profileBackdropUnderCard: Bool
+    var profileBackdropWholeSection: Bool
+    var profileBackdropTransition: Bool
+    var profileBackdropAvatarColorFallback: Bool
 }
 
 private struct CustomizationArguments {
@@ -154,6 +206,10 @@ private struct CustomizationArguments {
     let toggleNewInfoCard: (Bool) -> Void
     let toggleNewButtons: (Bool) -> Void
     let toggleButtonName: (Bool) -> Void
+    let toggleProfileBackdropUnderCard: (Bool) -> Void
+    let toggleProfileBackdropWholeSection: (Bool) -> Void
+    let toggleProfileBackdropTransition: (Bool) -> Void
+    let toggleProfileBackdropAvatarColorFallback: (Bool) -> Void
 }
 
 private func customizationSettingsEntries(state: CustomizationState, screen: CustomizationScreen) -> [CustomizationEntry] {
@@ -175,18 +231,46 @@ private func customizationSettingsEntries(state: CustomizationState, screen: Cus
         entries.append(.showButtonName(title: "Show button name", value: state.showButtonName))
         entries.append(.showButtonNameInfo("Shows action names such as call, video, and mute below the buttons."))
     }
+    entries.append(.profileBackdropUnderCard(title: "Color background below card", value: state.profileBackdropUnderCard))
+    entries.append(.profileBackdropUnderCardInfo("Colors the area around the information card with the profile color gradient."))
+    entries.append(.profileBackdropWholeSection(title: "Color the whole section", value: state.profileBackdropWholeSection))
+    entries.append(.profileBackdropWholeSectionInfo("Extends the profile color treatment across the full information section, including its glass card."))
+    entries.append(.profileBackdropTransition(title: "Blend into profile background", value: state.profileBackdropTransition))
+    entries.append(.profileBackdropTransitionInfo("Adds a color transition between the profile header and information section."))
+    entries.append(.profileBackdropAvatarColorFallback(title: "Use avatar photo color", value: state.profileBackdropAvatarColorFallback))
+    entries.append(.profileBackdropAvatarColorFallbackInfo("When no profile or gift color exists, extracts an average color from the profile photo."))
     return entries
 }
 
 private func customizationState() -> CustomizationState {
     let defaults = UserDefaults.standard
+    let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
+    let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
+    let selectedMode: Int
+    if underCard {
+        selectedMode = 0
+    } else if wholeSection {
+        selectedMode = 1
+    } else {
+        selectedMode = 2
+    }
+    let normalizedUnderCard = selectedMode == 0
+    let normalizedWholeSection = selectedMode == 1
+    let normalizedTransition = selectedMode == 2
+    defaults.set(normalizedUnderCard, forKey: "netgramProfileBackdropUnderCard")
+    defaults.set(normalizedWholeSection, forKey: "netgramProfileBackdropWholeSection")
+    defaults.set(normalizedTransition, forKey: "netgramProfileBackdropTransition")
     return CustomizationState(
         showUserId: defaults.bool(forKey: "netgramShowUserId"),
         showUserDc: defaults.bool(forKey: "netgramShowUserDc"),
         useNewMusic: defaults.bool(forKey: "netgramUseNewMusicPlayer"),
         useNewInfoCard: defaults.object(forKey: "netgramUseNewInfoCard") == nil ? true : defaults.bool(forKey: "netgramUseNewInfoCard"),
         useNewButtons: defaults.bool(forKey: "netgramUseNewButtons"),
-        showButtonName: defaults.bool(forKey: "netgramShowButtonName")
+        showButtonName: defaults.bool(forKey: "netgramShowButtonName"),
+        profileBackdropUnderCard: normalizedUnderCard,
+        profileBackdropWholeSection: normalizedWholeSection,
+        profileBackdropTransition: normalizedTransition,
+        profileBackdropAvatarColorFallback: defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback")
     )
 }
 
@@ -218,7 +302,65 @@ private func makeCustomizationSettingsController(context: AccountContext, screen
         toggleNewMusic: { value in setValue("netgramUseNewMusicPlayer", { state, value in state.useNewMusic = value }, value) },
         toggleNewInfoCard: { value in setValue("netgramUseNewInfoCard", { state, value in state.useNewInfoCard = value }, value) },
         toggleNewButtons: { value in setValue("netgramUseNewButtons", { state, value in state.useNewButtons = value }, value) },
-        toggleButtonName: { value in setValue("netgramShowButtonName", { state, value in state.showButtonName = value }, value) }
+        toggleButtonName: { value in setValue("netgramShowButtonName", { state, value in state.showButtonName = value }, value) },
+        toggleProfileBackdropUnderCard: { value in
+            let nextState = stateValue.modify { state -> CustomizationState in
+                var updated = state
+                if value {
+                    updated.profileBackdropUnderCard = true
+                    updated.profileBackdropWholeSection = false
+                    updated.profileBackdropTransition = false
+                } else if updated.profileBackdropUnderCard {
+                    updated.profileBackdropUnderCard = false
+                    updated.profileBackdropTransition = true
+                }
+                return updated
+            }
+            let defaults = UserDefaults.standard
+            defaults.set(nextState.profileBackdropUnderCard, forKey: "netgramProfileBackdropUnderCard")
+            defaults.set(nextState.profileBackdropWholeSection, forKey: "netgramProfileBackdropWholeSection")
+            defaults.set(nextState.profileBackdropTransition, forKey: "netgramProfileBackdropTransition")
+            statePromise.set(nextState)
+        },
+        toggleProfileBackdropWholeSection: { value in
+            let nextState = stateValue.modify { state -> CustomizationState in
+                var updated = state
+                if value {
+                    updated.profileBackdropUnderCard = false
+                    updated.profileBackdropWholeSection = true
+                    updated.profileBackdropTransition = false
+                } else if updated.profileBackdropWholeSection {
+                    updated.profileBackdropWholeSection = false
+                    updated.profileBackdropTransition = true
+                }
+                return updated
+            }
+            let defaults = UserDefaults.standard
+            defaults.set(nextState.profileBackdropUnderCard, forKey: "netgramProfileBackdropUnderCard")
+            defaults.set(nextState.profileBackdropWholeSection, forKey: "netgramProfileBackdropWholeSection")
+            defaults.set(nextState.profileBackdropTransition, forKey: "netgramProfileBackdropTransition")
+            statePromise.set(nextState)
+        },
+        toggleProfileBackdropTransition: { value in
+            let nextState = stateValue.modify { state -> CustomizationState in
+                var updated = state
+                if value {
+                    updated.profileBackdropUnderCard = false
+                    updated.profileBackdropWholeSection = false
+                    updated.profileBackdropTransition = true
+                } else if updated.profileBackdropTransition {
+                    updated.profileBackdropTransition = false
+                    updated.profileBackdropUnderCard = true
+                }
+                return updated
+            }
+            let defaults = UserDefaults.standard
+            defaults.set(nextState.profileBackdropUnderCard, forKey: "netgramProfileBackdropUnderCard")
+            defaults.set(nextState.profileBackdropWholeSection, forKey: "netgramProfileBackdropWholeSection")
+            defaults.set(nextState.profileBackdropTransition, forKey: "netgramProfileBackdropTransition")
+            statePromise.set(nextState)
+        },
+        toggleProfileBackdropAvatarColorFallback: { value in setValue("netgramProfileBackdropAvatarColorFallback", { state, value in state.profileBackdropAvatarColorFallback = value }, value) }
     )
 
     let signal = combineLatest(queue: .mainQueue(), context.sharedContext.presentationData, statePromise.get())

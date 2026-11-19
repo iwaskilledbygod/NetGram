@@ -383,6 +383,10 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
     let sourceMessageId: EngineMessage.Id?
     var canDeleteReaction = false
     var dataDisposable: Disposable?
+    private let profileBackdropAvatarDisposable = MetaDisposable()
+    private var profileBackdropAvatarKey: String?
+    private var profileBackdropAvatarColor: UIColor?
+    private var profileBackdropSettingsObserver: NSObjectProtocol?
     
     let activeActionDisposable = MetaDisposable()
     let logoutConfirmationDisposable = MetaDisposable()
@@ -528,6 +532,18 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
         self.paneContainerNode = PeerInfoPaneContainerNode(context: context, updatedPresentationData: controller.updatedPresentationData, peerId: peerId, chatLocation: chatLocation, sharedMediaFromForumTopic: sharedMediaFromForumTopic, chatLocationContextHolder: chatLocationContextHolder, isMediaOnly: self.isMediaOnly, initialPaneKey: initialPaneKey, initialStoryFolderId: switchToStoryFolder, initialGiftCollectionId: switchToGiftCollection, switchToMediaTarget: switchToMediaTarget)
         
         super.init()
+
+        if !isSettings {
+            self.profileBackdropSettingsObserver = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main, using: { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                self.updateProfileBackdropAvatarColor(for: self.data?.peer)
+                if let (layout, navigationHeight) = self.validLayout {
+                    self.containerLayoutUpdated(layout: layout, navigationHeight: navigationHeight, transition: .immediate)
+                }
+            })
+        }
         
         self.paneContainerNode.parentController = controller
         
@@ -2124,6 +2140,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                     }
                 } else {
                     strongSelf.state = strongSelf.state.withIsEditing(false).withUpdatingBio(nil).withUpdatingBirthDate(nil).withIsEditingBirthDate(false).withUpdatingNote(nil)
+                    strongSelf.updateProfileBackdropAvatarColor(for: strongSelf.data?.peer)
                     if let (layout, navigationHeight) = strongSelf.validLayout {
                         strongSelf.scrollNode.view.setContentOffset(CGPoint(), animated: false)
                         strongSelf.containerLayoutUpdated(layout: layout, navigationHeight: navigationHeight, transition: .immediate, additive: false)
@@ -2748,6 +2765,10 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
     
     deinit {
         self.dataDisposable?.dispose()
+        self.profileBackdropAvatarDisposable.dispose()
+        if let observer = self.profileBackdropSettingsObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
         self.walletStickersPreloadDisposable.dispose()
         self.hiddenMediaDisposable?.dispose()
         self.activeActionDisposable.dispose()
@@ -2799,6 +2820,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
     func activateEdit() {
         (self.controller?.parent as? TabBarController)?.updateIsTabBarHidden(true, transition: .animated(duration: 0.3, curve: .linear))
         self.state = self.state.withIsEditing(true)
+        self.profileBackdropAvatarDisposable.set(nil)
         var updateOnCompletion = false
         if self.headerNode.isAvatarExpanded {
             updateOnCompletion = true
@@ -2866,6 +2888,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
             }
         }
         self.data = data
+        self.updateProfileBackdropAvatarColor(for: data.peer)
         if previousData?.members?.membersContext !== data.members?.membersContext {
             if let peer = data.peer, let _ = data.members {
                 self.groupMembersSearchContext = GroupMembersSearchContext(context: self.context, peerId: peer.id)
@@ -3005,6 +3028,56 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
         setLayerDisableScreenshots(self.layer, peerInfoIsCopyProtected(data: data, sharedMediaFromForumTopic: self.sharedMediaFromForumTopic))
     }
     
+    private func updateProfileBackdropAvatarColor(for peer: EnginePeer?) {
+        let defaults = UserDefaults.standard
+        let fallbackEnabled = defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback")
+        let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
+        let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
+        let modeEnabled = underCard || wholeSection || (defaults.object(forKey: "netgramProfileBackdropTransition") == nil ? true : defaults.bool(forKey: "netgramProfileBackdropTransition"))
+        let hasProfileColor: Bool
+        if let peer, case .user = peer {
+            if let status = peer.emojiStatus, case .starGift = status.content {
+                hasProfileColor = true
+            } else {
+                hasProfileColor = peer.effectiveProfileColor != nil
+            }
+        } else {
+            hasProfileColor = false
+        }
+        guard fallbackEnabled, modeEnabled, !hasProfileColor, !self.isSettings, !self.state.isEditing, let peer, case .user = peer,
+              let representation = peer.profileImageRepresentations.first, let imageSignal = peerAvatarImage(account: self.context.account, peerReference: PeerReference(peer), authorOfMessage: nil, representation: representation, displayDimensions: CGSize(width: 64.0, height: 64.0), inset: 0.0, emptyColor: nil, synchronousLoad: false) else {
+            self.profileBackdropAvatarDisposable.set(nil)
+            self.profileBackdropAvatarKey = nil
+            self.profileBackdropAvatarColor = nil
+            return
+        }
+        let key = "\(peer.id)\(representation.resource.id.stringRepresentation)"
+        guard self.profileBackdropAvatarKey != key else {
+            return
+        }
+        self.profileBackdropAvatarKey = key
+        self.profileBackdropAvatarColor = nil
+        self.profileBackdropAvatarDisposable.set((imageSignal
+        |> runOn(.concurrentDefaultQueue())
+        |> map { imageVersions -> UIColor? in
+            if let image = imageVersions?.0 {
+                return averageColor(from: image)
+            }
+            return nil
+        }
+        |> filter { $0 != nil }
+        |> take(1)
+        |> deliverOnMainQueue).startStrict(next: { [weak self] color in
+            guard let self, self.profileBackdropAvatarKey == key, let color else {
+                return
+            }
+            self.profileBackdropAvatarColor = color
+            if let (layout, navigationHeight) = self.validLayout {
+                self.containerLayoutUpdated(layout: layout, navigationHeight: navigationHeight, transition: .immediate)
+            }
+        }))
+    }
+
     func scrollToTop() {
         if !self.paneContainerNode.scrollToTop() {
             self.scrollNode.view.setContentOffset(CGPoint(), animated: true)
@@ -5767,21 +5840,39 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                              
                 let sectionWidth = layout.size.width - insets.left - insets.right
 
-                // NetGram: a light glass surface softly follows the profile cover colors.
                 var glassTintColor: UIColor?
+                var profileBackdropColor: UIColor?
+                var profileBackdropMode = 0
+                var profileBackdropTopExtension: CGFloat = 0.0
                 if !self.isSettings, let infoSectionId = sectionId.base as? InfoSection, infoSectionId == .peerInfo, let peer = self.data?.peer, case .user = peer, !self.state.isEditing {
+                    let defaults = UserDefaults.standard
+                    let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
+                    let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
+                    let hasTransitionValue = defaults.object(forKey: "netgramProfileBackdropTransition") != nil
+                    let transition = hasTransitionValue ? defaults.bool(forKey: "netgramProfileBackdropTransition") : !underCard && !wholeSection
+                    if underCard {
+                        profileBackdropMode = 0
+                    } else if wholeSection {
+                        profileBackdropMode = 1
+                    } else if transition {
+                        profileBackdropMode = 2
+                    }
                     let coverColors: (UIColor, UIColor)?
                     if let status = peer.emojiStatus, case let .starGift(_, _, _, _, _, innerColor, outerColor, _, _) = status.content {
                         coverColors = (UIColor(rgb: UInt32(bitPattern: innerColor)), UIColor(rgb: UInt32(bitPattern: outerColor)))
                     } else if let profileColor = peer.effectiveProfileColor {
                         let colors = self.context.peerNameColors.getProfile(profileColor, dark: self.presentationData.theme.overallDarkAppearance)
                         coverColors = (colors.main, colors.secondary ?? colors.main)
+                    } else if defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback"), let avatarColor = self.profileBackdropAvatarColor {
+                        coverColors = (avatarColor, avatarColor.mixedWith(self.presentationData.theme.list.blocksBackgroundColor, alpha: 0.25))
                     } else {
                         coverColors = nil
                     }
                     if let coverColors {
                         let blendedCoverColor = coverColors.0.mixedWith(coverColors.1, alpha: 0.35)
                         glassTintColor = UIColor(white: 1.0, alpha: 0.72).blitOver(blendedCoverColor, alpha: 1.0)
+                        profileBackdropColor = blendedCoverColor
+                        profileBackdropTopExtension = min(36.0, sectionSpacing + 12.0)
                     }
                 }
                 if isFirstSection && sectionItems.first is PeerInfoScreenHeaderItem && !self.state.isEditing {
@@ -5789,7 +5880,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                         contentHeight -= 16.0
                     }
                 }
-                let sectionHeight = sectionNode.update(context: self.context, width: sectionWidth, safeInsets: UIEdgeInsets(), hasCorners: !insets.left.isZero, presentationData: self.presentationData, items: sectionItems, transition: transition, glassTintColor: glassTintColor)
+                let sectionHeight = sectionNode.update(context: self.context, width: sectionWidth, safeInsets: UIEdgeInsets(), hasCorners: !insets.left.isZero, presentationData: self.presentationData, items: sectionItems, transition: transition, glassTintColor: glassTintColor, profileBackdropColor: profileBackdropColor, profileBackdropMode: profileBackdropMode, profileBackdropTopExtension: profileBackdropTopExtension)
                 let sectionFrame = CGRect(origin: CGPoint(x: insets.left, y: contentHeight), size: CGSize(width: sectionWidth, height: sectionHeight))
                 if additive {
                     transition.updateFrameAdditive(node: sectionNode, frame: sectionFrame)

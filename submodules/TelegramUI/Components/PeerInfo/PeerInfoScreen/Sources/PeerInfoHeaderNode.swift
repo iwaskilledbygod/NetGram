@@ -705,6 +705,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
             currentWalletBalance = nil
         }
         let musicHeight: CGFloat = hasBackground || self.isAvatarExpanded ? 24.0 : 16.0
+        let useNewMusicPlayer = UserDefaults.standard.bool(forKey: "netgramUseNewMusicPlayer")
         let bottomInset: CGFloat = currentSavedMusic != nil ? musicHeight : 0.0
         let balanceInset: CGFloat = currentWalletBalance != nil ? 32.0 : 0.0
         
@@ -2113,9 +2114,11 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         let height: CGFloat
         let maxY: CGFloat
         let backgroundHeight: CGFloat
+        let musicLayoutHeight: CGFloat
         if self.isAvatarExpanded {
             rawHeight = expandedAvatarHeight
-            height = max(navigationHeight, rawHeight - contentOffset)
+            musicLayoutHeight = rawHeight - contentOffset
+            height = max(navigationHeight, musicLayoutHeight)
             maxY = height - 98.0
             backgroundHeight = height
         } else {
@@ -2133,6 +2136,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 }
             }
             expandablePart += bottomInset
+            musicLayoutHeight = navigationHeight + expandablePart
             height = navigationHeight + max(0.0, expandablePart)
             maxY = navigationHeight + panelWithAvatarHeight - contentOffset
             backgroundHeight = height
@@ -2714,7 +2718,6 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         }
 
         if currentSavedMusic != nil {
-            let useNewMusicPlayer = UserDefaults.standard.bool(forKey: "netgramUseNewMusicPlayer")
             var musicTransition = transition
             if useNewMusicPlayer && (hasBackground || self.isAvatarExpanded) {
                 if self.musicBackground == nil {
@@ -2736,7 +2739,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 let cardFrame = CGRect(
                     origin: CGPoint(
                         x: stripLeft + cardHorizontalInset,
-                        y: (apparentBackgroundHeight - backgroundHeight) + backgroundHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel
+                        y: musicLayoutHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel
                     ),
                     size: cardSize
                 )
@@ -2833,7 +2836,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                     environment: {},
                     containerSize: CGSize(width: musicBandWidth, height: musicHeight)
                 )
-                let musicFrame = CGRect(origin: CGPoint(x: stripLeft, y: (apparentBackgroundHeight - backgroundHeight) + backgroundHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel), size: musicSize)
+                let musicFrame = CGRect(origin: CGPoint(x: stripLeft, y: musicLayoutHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel), size: musicSize)
                 if let musicBackground = self.musicBackground {
                     let cardHorizontalInset: CGFloat = 18.0
                     let cardWidth = max(0.0, musicBandWidth - cardHorizontalInset * 2.0)

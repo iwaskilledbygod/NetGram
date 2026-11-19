@@ -7,6 +7,7 @@ import Display
 import TelegramPresentationData
 import ComponentFlow
 import LottieComponent
+import GlassBackgroundComponent
 
 enum PeerInfoHeaderButtonKey: Hashable {
     case message
@@ -62,6 +63,7 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
     
     let backgroundContainerView: UIView
     let backgroundView: UIView
+    private var glassBackgroundView: GlassBackgroundView?
     
     init(key: PeerInfoHeaderButtonKey, action: @escaping (PeerInfoHeaderButtonNode, ContextGesture?) -> Void) {
         self.key = key
@@ -334,12 +336,31 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
             visibleBackgroundFrame = backgroundFrame
         }
         transition.updateFrame(view: self.backgroundView, frame: visibleBackgroundFrame)
-        self.backgroundView.backgroundColor = useNewButtons ? backgroundColor : .white
+        let reduceTransparency = isReduceTransparencyEnabled()
+        let useGlassBackground = useNewButtons && !reduceTransparency && visibleBackgroundFrame.width > 0.0 && visibleBackgroundFrame.height > 0.0
+        self.backgroundView.isHidden = useGlassBackground
+        self.backgroundView.backgroundColor = useNewButtons ? (reduceTransparency ? backgroundColor : .clear) : .white
         
         transition.updateSublayerTransformScale(node: self.contentNode, scale: 1.0 * fraction + 0.001 * (1.0 - fraction))
         
         let cornerRadius = useNewButtons ? visibleBackgroundFrame.height * 0.5 : min(16.0, backgroundFrame.height * 0.5)
         transition.updateCornerRadius(layer: self.backgroundView.layer, cornerRadius: cornerRadius)
+        if useGlassBackground {
+            let glassBackgroundView: GlassBackgroundView
+            if let current = self.glassBackgroundView {
+                glassBackgroundView = current
+            } else {
+                glassBackgroundView = GlassBackgroundView(frame: CGRect())
+                glassBackgroundView.isUserInteractionEnabled = false
+                self.glassBackgroundView = glassBackgroundView
+                self.backgroundContainerView.insertSubview(glassBackgroundView, at: 0)
+            }
+            transition.updateFrame(view: glassBackgroundView, frame: visibleBackgroundFrame)
+            glassBackgroundView.update(size: visibleBackgroundFrame.size, cornerRadius: cornerRadius, isDark: presentationData.theme.overallDarkAppearance, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .clear, color: backgroundColor.withAlphaComponent(0.22))), transition: ComponentTransition(transition))
+        } else if let glassBackgroundView = self.glassBackgroundView {
+            self.glassBackgroundView = nil
+            glassBackgroundView.removeFromSuperview()
+        }
         // The context source contains only the foreground; its backdrop is a
         // separate shared-blur mask. Match both its rounded shape and its visible
         // bounds, including a partially collapsed header.
