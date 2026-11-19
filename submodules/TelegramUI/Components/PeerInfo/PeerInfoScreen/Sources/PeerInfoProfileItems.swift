@@ -159,7 +159,7 @@ func infoItems(
                 })
                 let menu = makeContextMenuController(actions: [action])
                 controller.present(menu, in: .window(.root), with: ContextMenuControllerPresentationArguments(sourceNodeAndRect: {
-                    return (node, node.bounds.insetBy(dx: 0.0, dy: -2.0), controller, controller.view.bounds)
+                    return (node, node.bounds.insetBy(dx: 0.0, dy: -2.0), controller.displayNode, controller.view.bounds)
                 }))
                 _ = gesture
             }
