@@ -47,7 +47,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         self.topSeparatorNode.isHidden = hasCorners
         self.bottomSeparatorNode.isHidden = hasCorners
 
-        if let profileBackdropColor {
+        if profileBackdropColor != nil {
             let backdropView: PeerInfoProfileBackdropGradientView
             if let current = self.profileBackdropView {
                 backdropView = current
