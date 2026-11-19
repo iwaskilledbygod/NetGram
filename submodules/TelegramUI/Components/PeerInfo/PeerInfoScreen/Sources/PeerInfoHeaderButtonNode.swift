@@ -46,10 +46,15 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
     private let iconNode: ASImageNode
     private let textNode: ImmediateTextNode
     private var animatedIcon: ComponentView<Empty>?
+    private var animatedIconName: String?
+    private var animatedIconColor: UIColor?
     
     private var theme: PresentationTheme?
     private var icon: PeerInfoHeaderButtonIcon?
     private var isActive: Bool?
+    private var cachedTitle: String?
+    private var cachedTitleColor: UIColor?
+    private var cachedTitleSize: CGSize = .zero
     private var contextMenuActivated = false
     weak var contextMenuSourceContainer: UIView?
     private weak var contextMenuBackgroundNode: NavigationBackgroundNode?
@@ -261,18 +266,24 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
                 animatedIcon = ComponentView()
                 self.animatedIcon = animatedIcon
             }
-            let _ = animatedIcon.update(
-                transition: .immediate,
-                component: AnyComponent(LottieComponent(
-                    content: LottieComponent.AppBundleContent(name: animationName),
-                    color: foregroundColor,
-                    startingPosition: seekToEnd ? .end : .begin
-                )),
-                environment: {},
-                containerSize: iconSize
-            )
+            if self.animatedIconName != animationName || self.animatedIconColor != foregroundColor {
+                self.animatedIconName = animationName
+                self.animatedIconColor = foregroundColor
+                let _ = animatedIcon.update(
+                    transition: .immediate,
+                    component: AnyComponent(LottieComponent(
+                        content: LottieComponent.AppBundleContent(name: animationName),
+                        color: foregroundColor,
+                        startingPosition: seekToEnd ? .end : .begin
+                    )),
+                    environment: {},
+                    containerSize: iconSize
+                )
+            }
         } else if let animatedIcon = self.animatedIcon {
             self.animatedIcon = nil
+            self.animatedIconName = nil
+            self.animatedIconColor = nil
             animatedIcon.view?.removeFromSuperview()
         }
         
@@ -287,7 +298,6 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         
         transition.updateTintColor(layer: self.iconNode.layer, color: foregroundColor)
         transition.updateTintColor(layer: self.titleNode.layer, color: foregroundColor)
-        transition.updateTintColor(layer: self.textNode.layer, color: foregroundColor)
         
         if isActiveUpdated {
             let alphaTransition = ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeInOut)
@@ -298,9 +308,16 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
             alphaTransition.updateAlpha(node: self.textNode, alpha: isActive ? 1.0 : 0.3)
         }
         
-        self.textNode.attributedText = NSAttributedString(string: showButtonName ? text.lowercased() : "", font: Font.regular(11.0), textColor: useNewButtons ? foregroundColor : .white)
+        let titleText = showButtonName ? text.lowercased() : ""
+        let titleColor = useNewButtons ? foregroundColor : UIColor.white
+        if self.cachedTitle != titleText || self.cachedTitleColor != titleColor {
+            self.cachedTitle = titleText
+            self.cachedTitleColor = titleColor
+            self.textNode.attributedText = NSAttributedString(string: titleText, font: Font.regular(11.0), textColor: titleColor)
+            self.cachedTitleSize = self.textNode.updateLayout(CGSize(width: 120.0, height: .greatestFiniteMagnitude))
+        }
         self.accessibilityLabel = text
-        let titleSize = self.textNode.updateLayout(CGSize(width: 120.0, height: .greatestFiniteMagnitude))
+        let titleSize = self.cachedTitleSize
         
         transition.updateFrame(node: self.containerNode, frame: CGRect(origin: CGPoint(), size: size))
         transition.updateFrame(node: self.contentNode, frame: CGRect(origin: CGPoint(x: 0.0, y: size.height * 0.5 * (1.0 - fraction)), size: size))

@@ -2747,8 +2747,8 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                     cornerRadius: musicHeight * 0.5,
                     isDark: presentationData.theme.overallDarkAppearance,
                     tintColor: GlassBackgroundView.TintColor(
-                        kind: .custom(style: .default, color: UIColor(white: 1.0, alpha: presentationData.theme.overallDarkAppearance ? 0.10 : 0.18)),
-                        innerColor: UIColor(white: 1.0, alpha: 0.22),
+                        kind: .custom(style: .default, color: contentButtonBackgroundColor.withAlphaComponent(presentationData.theme.overallDarkAppearance ? 0.36 : 0.28)),
+                        innerColor: contentButtonBackgroundColor.withAlphaComponent(0.34),
                         innerInset: 1.0
                     ),
                     isInteractive: false,
@@ -2768,7 +2768,8 @@ final class PeerInfoHeaderNode: ASDisplayNode {
             }
 
             let isOverlay = self.isAvatarExpanded || hasBackground
-            let stripSecondaryColor = hasCoverColor ? navigationContentsSecondaryColor.mixedWith(.white, alpha: 0.45) : navigationContentsSecondaryColor
+            let musicOverlay = useNewMusicPlayer && isOverlay
+            let stripSecondaryColor = hasCoverColor && musicOverlay ? navigationContentsSecondaryColor.mixedWith(.white, alpha: 0.45) : navigationContentsSecondaryColor
             let musicBandWidth = max(0.0, backgroundFrame.width - stripLeft - stripRight)
             if let currentSavedMusic {
                 var artist = presentationData.strings.MediaPlayer_UnknownArtist
@@ -2833,6 +2834,12 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                     containerSize: CGSize(width: musicBandWidth, height: musicHeight)
                 )
                 let musicFrame = CGRect(origin: CGPoint(x: stripLeft, y: (apparentBackgroundHeight - backgroundHeight) + backgroundHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel), size: musicSize)
+                if let musicBackground = self.musicBackground {
+                    let cardHorizontalInset: CGFloat = 18.0
+                    let cardWidth = max(0.0, musicBandWidth - cardHorizontalInset * 2.0)
+                    let cardFrame = CGRect(x: stripLeft + cardHorizontalInset, y: musicFrame.minY, width: cardWidth, height: musicHeight)
+                    musicTransition.updateFrame(view: musicBackground, frame: cardFrame)
+                }
                 if let musicView = music.view {
                     self.regularContentNode.accessibilityTrailingView = musicView
                     let wasAdded = musicView.superview == nil

@@ -2,14 +2,16 @@ import Foundation
 import UIKit
 import Display
 import AccountContext
-import TelegramPresentationData
+import SwiftSignalKit
 import TelegramCore
+import AsyncDisplayKit
+import ContextUI
+import UndoUI
+import TelegramPresentationData
 import PeerInfoUI
 import TextFormat
 import PhoneNumberFormat
-import SwiftSignalKit
 import TelegramStringFormatting
-import AsyncDisplayKit
 import LocationResources
 import AttachmentUI
 import WebUI
@@ -143,20 +145,42 @@ func infoItems(
         
         // NetGram: ID и DC в самом верху единой карточки профиля
         let defaults = UserDefaults.standard
+        let controllerForCopy = interaction.getController
+        let makeCopyContextAction: (String, String) -> ((ASDisplayNode, ContextGesture?, CGPoint?) -> Void) = { value, copiedText in
+            return { node, gesture, _ in
+                guard let controller = controllerForCopy() else {
+                    return
+                }
+                let copyTitle = "Copy"
+                let action = ContextMenuAction(content: .text(title: copyTitle, accessibilityLabel: copyTitle), action: {
+                    UIPasteboard.general.string = value
+                    let updatedPresentationData = context.sharedContext.currentPresentationData.with { $0 }
+                    controller.present(UndoOverlayController(presentationData: updatedPresentationData, content: .copy(text: copiedText), elevatedLayout: false, animateInAsReplacement: false, action: { _ in false }), in: .current)
+                })
+                let menu = makeContextMenuController(actions: [action])
+                controller.present(menu, in: .window(.root), with: ContextMenuControllerPresentationArguments(sourceNodeAndRect: {
+                    return (node, node.bounds.insetBy(dx: 0.0, dy: -2.0), controller, controller.view.bounds)
+                }))
+                _ = gesture
+            }
+        }
         if defaults.bool(forKey: "netgramShowUserId") {
-            items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2996, label: "User ID", text: String(user.id.id._internalGetInt64Value()), textColor: .accent, action: nil, requestLayout: { _ in
+            let userId = String(user.id.id._internalGetInt64Value())
+            items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2996, label: "User ID", text: userId, textColor: .accent, action: nil, contextAction: makeCopyContextAction(userId, "User ID copied"), requestLayout: { _ in
             }))
         }
         if defaults.bool(forKey: "netgramShowUserDc") {
             let dcId = context.account.network.datacenterId
-            items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2997, label: "Data Center", text: "DC\(dcId)", textColor: .accent, action: nil, requestLayout: { _ in
+            let dcValue = "DC\(dcId)"
+            items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 2997, label: "Data Center", text: dcValue, textColor: .accent, action: nil, contextAction: makeCopyContextAction(dcValue, "Data Center copied"), requestLayout: { _ in
             }))
         }
 
         // NetGram: in the new card style the personal channel remains a row, without its section title/count.
         if let personalChannel = data.personalChannel {
             let peerId = personalChannel.peer.peerId
-            let useNewInfoCard = UserDefaults.standard.bool(forKey: "netgramUseNewInfoCard")
+            let defaults = UserDefaults.standard
+            let useNewInfoCard = defaults.object(forKey: "netgramUseNewInfoCard") == nil ? true : defaults.bool(forKey: "netgramUseNewInfoCard")
             if !useNewInfoCard {
                 var label: String?
                 if let subscriberCount = personalChannel.subscriberCount {

@@ -12,9 +12,15 @@ private enum CustomizationSection: Int32 {
     case profile = 0
 }
 
+private enum CustomizationScreen: Equatable {
+    case root
+    case profile
+}
+
 private enum CustomizationEntry: ItemListNodeEntry {
     enum StableId: Hashable {
         case profileHeader
+        case profileDisclosure
         case showUserId
         case showUserIdInfo
         case showUserDc
@@ -30,6 +36,7 @@ private enum CustomizationEntry: ItemListNodeEntry {
     }
 
     case profileHeader(String)
+    case profileDisclosure(String)
     case showUserId(title: String, value: Bool)
     case showUserIdInfo(String)
     case showUserDc(title: String, value: Bool)
@@ -48,6 +55,7 @@ private enum CustomizationEntry: ItemListNodeEntry {
     var stableId: StableId {
         switch self {
         case .profileHeader: return .profileHeader
+        case .profileDisclosure: return .profileDisclosure
         case .showUserId: return .showUserId
         case .showUserIdInfo: return .showUserIdInfo
         case .showUserDc: return .showUserDc
@@ -65,7 +73,7 @@ private enum CustomizationEntry: ItemListNodeEntry {
 
     var sortIndex: Int32 {
         switch self {
-        case .profileHeader: return 0
+        case .profileHeader, .profileDisclosure: return 0
         case .showUserId: return 1
         case .showUserIdInfo: return 2
         case .showUserDc: return 3
@@ -83,7 +91,7 @@ private enum CustomizationEntry: ItemListNodeEntry {
 
     static func ==(lhs: CustomizationEntry, rhs: CustomizationEntry) -> Bool {
         switch (lhs, rhs) {
-        case let (.profileHeader(a), .profileHeader(b)), let (.showUserIdInfo(a), .showUserIdInfo(b)), let (.showUserDcInfo(a), .showUserDcInfo(b)), let (.newMusicInfo(a), .newMusicInfo(b)), let (.newInfoCardInfo(a), .newInfoCardInfo(b)), let (.newButtonsInfo(a), .newButtonsInfo(b)), let (.showButtonNameInfo(a), .showButtonNameInfo(b)):
+        case let (.profileHeader(a), .profileHeader(b)), let (.profileDisclosure(a), .profileDisclosure(b)), let (.showUserIdInfo(a), .showUserIdInfo(b)), let (.showUserDcInfo(a), .showUserDcInfo(b)), let (.newMusicInfo(a), .newMusicInfo(b)), let (.newInfoCardInfo(a), .newInfoCardInfo(b)), let (.newButtonsInfo(a), .newButtonsInfo(b)), let (.showButtonNameInfo(a), .showButtonNameInfo(b)):
             return a == b
         case let (.showUserId(a, av), .showUserId(b, bv)), let (.showUserDc(a, av), .showUserDc(b, bv)), let (.newMusic(a, av), .newMusic(b, bv)), let (.newInfoCard(a, av), .newInfoCard(b, bv)), let (.newButtons(a, av), .newButtons(b, bv)), let (.showButtonName(a, av), .showButtonName(b, bv)):
             return a == b && av == bv
@@ -99,6 +107,8 @@ private enum CustomizationEntry: ItemListNodeEntry {
         switch self {
         case let .profileHeader(text):
             return ItemListSectionHeaderItem(presentationData: presentationData, text: text, sectionId: self.section)
+        case let .profileDisclosure(text):
+            return ItemListDisclosureItem(presentationData: presentationData, systemStyle: .glass, icon: nil, title: text, label: "", labelStyle: .text, sectionId: self.section, style: .blocks, disclosureStyle: .arrow, action: arguments.openProfile)
         case let .showUserId(title, value):
             return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: title, value: value, sectionId: self.section, style: .blocks, updated: arguments.toggleUserId)
         case let .showUserIdInfo(text):
@@ -137,6 +147,7 @@ private struct CustomizationState: Equatable {
 }
 
 private struct CustomizationArguments {
+    let openProfile: () -> Void
     let toggleUserId: (Bool) -> Void
     let toggleUserDc: (Bool) -> Void
     let toggleNewMusic: (Bool) -> Void
@@ -145,7 +156,10 @@ private struct CustomizationArguments {
     let toggleButtonName: (Bool) -> Void
 }
 
-private func customizationSettingsEntries(state: CustomizationState) -> [CustomizationEntry] {
+private func customizationSettingsEntries(state: CustomizationState, screen: CustomizationScreen) -> [CustomizationEntry] {
+    guard screen == .profile else {
+        return [.profileDisclosure("Profile")]
+    }
     var entries: [CustomizationEntry] = [.profileHeader("PROFILE")]
     entries.append(.showUserId(title: "Show user ID", value: state.showUserId))
     entries.append(.showUserIdInfo("Displays the unique numeric Telegram account identifier inside the profile information card."))
@@ -164,16 +178,24 @@ private func customizationSettingsEntries(state: CustomizationState) -> [Customi
     return entries
 }
 
-public func customizationSettingsController(context: AccountContext) -> ViewController {
-    let initialState = CustomizationState(
-        showUserId: UserDefaults.standard.bool(forKey: "netgramShowUserId"),
-        showUserDc: UserDefaults.standard.bool(forKey: "netgramShowUserDc"),
-        useNewMusic: UserDefaults.standard.bool(forKey: "netgramUseNewMusicPlayer"),
-        useNewInfoCard: UserDefaults.standard.bool(forKey: "netgramUseNewInfoCard"),
-        useNewButtons: UserDefaults.standard.bool(forKey: "netgramUseNewButtons"),
-        showButtonName: UserDefaults.standard.bool(forKey: "netgramShowButtonName")
+private func customizationState() -> CustomizationState {
+    let defaults = UserDefaults.standard
+    return CustomizationState(
+        showUserId: defaults.bool(forKey: "netgramShowUserId"),
+        showUserDc: defaults.bool(forKey: "netgramShowUserDc"),
+        useNewMusic: defaults.bool(forKey: "netgramUseNewMusicPlayer"),
+        useNewInfoCard: defaults.object(forKey: "netgramUseNewInfoCard") == nil ? true : defaults.bool(forKey: "netgramUseNewInfoCard"),
+        useNewButtons: defaults.bool(forKey: "netgramUseNewButtons"),
+        showButtonName: defaults.bool(forKey: "netgramShowButtonName")
     )
+}
 
+public func customizationSettingsController(context: AccountContext) -> ViewController {
+    return makeCustomizationSettingsController(context: context, screen: .root)
+}
+
+private func makeCustomizationSettingsController(context: AccountContext, screen: CustomizationScreen) -> ItemListController {
+    let initialState = customizationState()
     let statePromise = ValuePromise<CustomizationState>(ignoreRepeated: true)
     let stateValue = Atomic<CustomizationState>(value: initialState)
     statePromise.set(initialState)
@@ -188,7 +210,9 @@ public func customizationSettingsController(context: AccountContext) -> ViewCont
             return updated
         }
     }
+    var openProfileImpl: (() -> Void)?
     let arguments = CustomizationArguments(
+        openProfile: { openProfileImpl?() },
         toggleUserId: { value in setValue("netgramShowUserId", { state, value in state.showUserId = value }, value) },
         toggleUserDc: { value in setValue("netgramShowUserDc", { state, value in state.showUserDc = value }, value) },
         toggleNewMusic: { value in setValue("netgramUseNewMusicPlayer", { state, value in state.useNewMusic = value }, value) },
@@ -199,10 +223,17 @@ public func customizationSettingsController(context: AccountContext) -> ViewCont
 
     let signal = combineLatest(queue: .mainQueue(), context.sharedContext.presentationData, statePromise.get())
     |> map { presentationData, state -> (ItemListControllerState, (ItemListNodeState, Any)) in
-        let entries = customizationSettingsEntries(state: state)
-        let controllerState = ItemListControllerState(presentationData: ItemListPresentationData(presentationData), title: .text("NetGram"), leftNavigationButton: nil, rightNavigationButton: nil, backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back))
+        let entries = customizationSettingsEntries(state: state, screen: screen)
+        let title = screen == .root ? "NetGram" : "Profile"
+        let controllerState = ItemListControllerState(presentationData: ItemListPresentationData(presentationData), title: .text(title), leftNavigationButton: nil, rightNavigationButton: nil, backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back))
         let listState = ItemListNodeState(presentationData: ItemListPresentationData(presentationData), entries: entries, style: .blocks)
         return (controllerState, (listState, arguments))
     }
-    return ItemListController(context: context, state: signal)
+    let controller = ItemListController(context: context, state: signal)
+    if screen == .root {
+        openProfileImpl = { [weak controller] in
+            controller?.push(makeCustomizationSettingsController(context: context, screen: .profile))
+        }
+    }
+    return controller
 }
