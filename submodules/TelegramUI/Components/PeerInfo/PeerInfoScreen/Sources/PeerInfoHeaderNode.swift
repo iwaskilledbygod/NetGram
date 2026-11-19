@@ -2539,7 +2539,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 // Sample the rendered colour of the cover's bottom edge once per peer, so the
                 // backdrop behind the information section starts with exactly the same colour,
                 // pattern and shading included — no visible seam between the band and the card.
-                let sampleKey = "\(peer?.id ?? PeerId(0))|\(Int(backgroundCoverSize.height))|\(Int(width))|\(presentationData.theme.overallDarkAppearance)"
+                let sampleKey = "\(peer?.id.id._internalGetInt64Value() ?? 0)|\(Int(backgroundCoverSize.height))|\(Int(width))|\(presentationData.theme.overallDarkAppearance)"
                 if self.sampledCoverEdgeKey != sampleKey {
                     self.sampledCoverEdgeKey = sampleKey
                     let sampleHeight: CGFloat = 6.0
