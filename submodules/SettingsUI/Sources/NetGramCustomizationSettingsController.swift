@@ -187,7 +187,7 @@ private enum CustomizationEntry: ItemListNodeEntry {
     case disclosure(Int32, String, CustomizationScreen)
     case toggle(Int32, String, String, Bool)
     case cycle(Int32, String, Int, [String])
-    case footer(Int32, String)
+    case text(Int32, String)
 
     var section: ItemListSectionId {
         return 0
@@ -203,14 +203,14 @@ private enum CustomizationEntry: ItemListNodeEntry {
             return "t\(index)\(key)"
         case let .cycle(index, key, _, _):
             return "c\(index)\(key)"
-        case let .footer(index, _):
-            return "f\(index)"
+        case let .text(index, _):
+            return "x\(index)"
         }
     }
 
     var sortIndex: Int32 {
         switch self {
-        case let .header(index, _), let .disclosure(index, _, _), let .toggle(index, _, _, _), let .cycle(index, _, _, _), let .footer(index, _):
+        case let .header(index, _), let .disclosure(index, _, _), let .toggle(index, _, _, _), let .cycle(index, _, _, _), let .text(index, _):
             return index
         }
     }
@@ -225,7 +225,7 @@ private enum CustomizationEntry: ItemListNodeEntry {
             return i == j && ka == kb && ta == tb && va == vb
         case let (.cycle(i, ka, ia, oa), .cycle(j, kb, ib, ob)):
             return i == j && ka == kb && ia == ib && oa == ob
-        case let (.footer(i, a), .footer(j, b)):
+        case let (.text(i, a), .text(j, b)):
             return i == j && a == b
         default:
             return false
@@ -254,7 +254,7 @@ private enum CustomizationEntry: ItemListNodeEntry {
             return ItemListDisclosureItem(presentationData: presentationData, systemStyle: .glass, icon: nil, title: "\(title): \(optionTitle)", label: "", labelStyle: .text, sectionId: self.section, style: .blocks, disclosureStyle: .none, action: {
                 arguments.cycle(cycleKey(title, options: options), options.count)
             })
-        case let .footer(_, text):
+        case let .text(_, text):
             return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
         }
     }
@@ -319,7 +319,7 @@ private func customizationEntries(screen: CustomizationScreen) -> [Customization
         entries.append(.disclosure(index, "Разное", .misc))
         index += 1
         if NetGramFeatures.enabled("ShowFeatureCounter") {
-            entries.append(.footer(index, "Включено функций: \(enabledFeatureCount()) из \(allToggleKeys().count)"))
+            entries.append(.text(index, "Включено функций: \(enabledFeatureCount()) из \(allToggleKeys().count)"))
             index += 1
         }
     case .profile:
@@ -356,7 +356,7 @@ private func customizationEntries(screen: CustomizationScreen) -> [Customization
         index += 1
         appendTable(&entries, table: notificationsToggles, showInfo: showInfo, showKeys: showKeys)
         let playing = UserDefaults.standard.bool(forKey: "netgramKeepAlivePlaying")
-        entries.append(.footer(index, "Статус бесшумной дорожки: \(playing ? "играет" : "остановлена")"))
+        entries.append(.text(index, "Статус бесшумной дорожки: \(playing ? "играет" : "остановлена")"))
         index += 1
     case .misc:
         entries.append(.header(index, "РАЗНОЕ"))
