@@ -6177,7 +6177,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
         if NetGramFeatures.enabled("HideListStatusIcons") {
             self.dateStatusIconNode?.isHidden = true
             self.pinnedIconNode.isHidden = true
-            self.secretIconNode.isHidden = true
+            self.secretIconNode?.isHidden = true
         }
         if NetGramFeatures.enabled("HideListBadges") {
             self.badgeNode.isHidden = true
@@ -6218,7 +6218,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             }
         }
         if NetGramFeatures.enabled("HideListItemTags") {
-            self.itemTagList?.view.isHidden = true
+            self.itemTagList?.view?.isHidden = true
         }
         if NetGramFeatures.enabled("HideListAvatars") {
             self.avatarNode.isHidden = true
