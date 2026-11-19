@@ -90,3 +90,4 @@ buildlog*.txt
 jobs.json
 run.json
 jj.json
+build_log_*.txt
