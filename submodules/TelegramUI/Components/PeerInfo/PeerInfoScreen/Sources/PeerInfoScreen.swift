@@ -386,6 +386,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
     private let profileBackdropAvatarDisposable = MetaDisposable()
     private var profileBackdropAvatarKey: String?
     private var profileBackdropAvatarColor: UIColor?
+    private var profileBackdropCoverEdgeColor: UIColor?
     private var profileBackdropSettingsObserver: NSObjectProtocol?
     
     let activeActionDisposable = MetaDisposable()
@@ -543,6 +544,16 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                     self.containerLayoutUpdated(layout: layout, navigationHeight: navigationHeight, transition: .immediate)
                 }
             })
+        }
+
+        self.headerNode.coverEdgeColorUpdated = { [weak self] color in
+            guard let self, self.profileBackdropCoverEdgeColor != color else {
+                return
+            }
+            self.profileBackdropCoverEdgeColor = color
+            if let (layout, navigationHeight) = self.validLayout {
+                self.containerLayoutUpdated(layout: layout, navigationHeight: navigationHeight, transition: .immediate)
+            }
         }
         
         self.paneContainerNode.parentController = controller
@@ -5866,13 +5877,21 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                             } else if peer.effectiveProfileColor != nil {
                                 hasCoverBand = true
                             }
-                            // The header cover's bottom edge carries the main profile colour for
-                            // profile colours and the outer colour for gift covers, so the
-                            // transition starts with the matching one. The top of the backdrop
-                            // stays solid behind the band, keeping the seam hidden.
+                            // The transition starts with the colour the header band actually
+                            // renders at its bottom edge (sampled from the cover, so the pattern
+                            // and shading are included). Until the sample arrives, the analytic
+                            // fallback is used: the main colour for profile colours and the
+                            // outer colour for gift covers.
+                            let analyticColor = isGiftCover ? coverColors.1 : coverColors.0
+                            let backdropColor: UIColor
+                            if hasCoverBand, let sampledColor = self.profileBackdropCoverEdgeColor {
+                                backdropColor = sampledColor
+                            } else {
+                                backdropColor = analyticColor
+                            }
                             let hold: CGFloat = hasCoverBand ? 220.0 : 0.0
                             glassTintColor = UIColor(white: 1.0, alpha: 0.12)
-                            profileBackdropColor = isGiftCover ? coverColors.1 : coverColors.0
+                            profileBackdropColor = backdropColor
                             profileBackdropTopExtension = (sectionSpacing + 12.0) + hold
                             profileBackdropHold = hold
                             profileBackdropSideInset = insets.left

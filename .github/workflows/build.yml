@@ -61,7 +61,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.14"
+          export BUILD_NUMBER="0.0.15"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -109,17 +109,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}
-          # Название релиза и «Что нового» обновлены для NetGram 0.0.14.
+          # Название релиза и «Что нового» обновлены для NetGram 0.0.15.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Переход цвета стал единой секцией: цвет фона аватара продолжается из шапки за карточку информации и растворяется к её нижнему краю.
-            - У подарочных обложек переход начинается с правильного внешнего цвета подарка — больше нет ступеньки под шапкой.
-            - Цветная зона тянется на всю ширину дисплея — исчезли светлые полоски по краям экрана.
-            - Кнопки действий опущены чуть ниже и больше не мешают капсуле баланса.
-            - Оформление фона упрощено до одного переключателя «Переход цвета из шапки».
+            - Убран видимый стык между шапкой и переходом цвета: переход теперь начинается с точно того же цвета, каким отрисован нижний край шапки, — профиль выглядит одной цельной секцией.
+            - Углы карточки информации стали чистыми: исчезли светлые квадратные артефакты по углам.
           draft: false
           prerelease: true
 

@@ -14,6 +14,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
     private let itemContainerNode: ASDisplayNode
     private var glassBackgroundView: GlassBackgroundView?
     private var profileBackdropView: PeerInfoProfileBackdropGradientView?
+    private var cardMaskLayer: CAShapeLayer?
     
     private var currentItems: [PeerInfoScreenItem] = []
     var itemNodes: [AnyHashable: PeerInfoScreenItemNode] = [:]
@@ -174,6 +175,30 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
             componentTransition.setCornerRadius(layer: glassBackgroundView.layer, cornerRadius: 20.0)
             let dark = presentationData.theme.overallDarkAppearance
             glassBackgroundView.update(size: glassFrame.size, cornerRadius: 20.0, isDark: dark, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: glassTintColor ?? UIColor(white: 0.5, alpha: 1.0)), innerColor: nil, innerInset: 3.0), transition: componentTransition)
+            // Clip the items to the rounded card shape, so square item backgrounds and the
+            // background-coloured corner caps never leak past the glass edges onto the
+            // coloured backdrop. Only applied when the card starts at the top of the section.
+            if contentWithBackgroundOffset < 0.5 {
+                let maskLayer: CAShapeLayer
+                if let current = self.cardMaskLayer {
+                    maskLayer = current
+                } else {
+                    maskLayer = CAShapeLayer()
+                    maskLayer.fillColor = UIColor.black.cgColor
+                    self.cardMaskLayer = maskLayer
+                    self.itemContainerNode.layer.mask = maskLayer
+                }
+                maskLayer.frame = self.itemContainerNode.bounds
+                maskLayer.path = UIBezierPath(roundedRect: glassFrame, cornerRadius: 20.0).cgPath
+            } else if self.cardMaskLayer != nil {
+                self.cardMaskLayer?.removeFromSuperlayer()
+                self.cardMaskLayer = nil
+                self.itemContainerNode.layer.mask = nil
+            }
+        } else if self.cardMaskLayer != nil {
+            self.cardMaskLayer?.removeFromSuperlayer()
+            self.cardMaskLayer = nil
+            self.itemContainerNode.layer.mask = nil
         }
         if let profileBackdropColor, let profileBackdropView = self.profileBackdropView {
             let cardHeight = max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset)

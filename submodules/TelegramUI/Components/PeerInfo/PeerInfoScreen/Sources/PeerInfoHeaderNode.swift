@@ -227,6 +227,10 @@ final class PeerInfoHeaderNode: ASDisplayNode {
     var hasBottomStrip: Bool {
         return self.music != nil
     }
+    /// Reports the actual rendered colour of the cover's bottom edge, so the backdrop behind
+    /// the information section can continue it without any visible seam.
+    var coverEdgeColorUpdated: ((UIColor) -> Void)?
+    private var sampledCoverEdgeKey: String?
 
     /// The track the music strip shows for `peer` and `screenData` (`peerInfoProfileMusic`): none on Settings and on the
     /// account's own peer opened as a profile.
@@ -2528,6 +2532,31 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 }
                 Queue.mainQueue().after(0.5) {
                     self.invokeDisplayGiftInfo()
+                }
+            }
+
+            if hasBackground {
+                // Sample the rendered colour of the cover's bottom edge once per peer, so the
+                // backdrop behind the information section starts with exactly the same colour,
+                // pattern and shading included — no visible seam between the band and the card.
+                let sampleKey = "\(peer?.id ?? PeerId(0))|\(Int(backgroundCoverSize.height))|\(Int(width))|\(presentationData.theme.overallDarkAppearance)"
+                if self.sampledCoverEdgeKey != sampleKey {
+                    self.sampledCoverEdgeKey = sampleKey
+                    let sampleHeight: CGFloat = 6.0
+                    let coverView = backgroundCoverView
+                    DispatchQueue.main.async { [weak self, weak coverView] in
+                        guard let self, let coverView, coverView.bounds.width > 1.0, coverView.bounds.height > sampleHeight else {
+                            return
+                        }
+                        let sampleRect = CGRect(x: 0.0, y: coverView.bounds.height - sampleHeight, width: coverView.bounds.width, height: sampleHeight)
+                        let renderer = UIGraphicsImageRenderer(bounds: sampleRect)
+                        let image = renderer.image { context in
+                            context.cgContext.translateBy(x: -sampleRect.minX, y: -sampleRect.minY)
+                            coverView.layer.render(in: context.cgContext)
+                        }
+                        let color = averageColor(from: image)
+                        self.coverEdgeColorUpdated?(color)
+                    }
                 }
             }
         }
