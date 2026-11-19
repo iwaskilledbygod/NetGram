@@ -180,7 +180,7 @@ func infoItems(
         if let personalChannel = data.personalChannel {
             let peerId = personalChannel.peer.peerId
             let defaults = UserDefaults.standard
-            let useNewInfoCard = defaults.object(forKey: "netgramUseNewInfoCard") == nil ? true : defaults.bool(forKey: "netgramUseNewInfoCard")
+            let useNewInfoCard = defaults.bool(forKey: "netgramUseNewInfoCard")
             if !useNewInfoCard {
                 var label: String?
                 if let subscriberCount = personalChannel.subscriberCount {

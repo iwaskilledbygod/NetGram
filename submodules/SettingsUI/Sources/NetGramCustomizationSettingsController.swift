@@ -214,62 +214,46 @@ private struct CustomizationArguments {
 
 private func customizationSettingsEntries(state: CustomizationState, screen: CustomizationScreen) -> [CustomizationEntry] {
     guard screen == .profile else {
-        return [.profileDisclosure("Profile")]
+        return [.profileDisclosure("Профиль")]
     }
-    var entries: [CustomizationEntry] = [.profileHeader("PROFILE")]
-    entries.append(.showUserId(title: "Show user ID", value: state.showUserId))
-    entries.append(.showUserIdInfo("Displays the unique numeric Telegram account identifier inside the profile information card."))
-    entries.append(.showUserDc(title: "Show user DC", value: state.showUserDc))
-    entries.append(.showUserDcInfo("Displays the data center (DC) used by this Telegram account inside the profile information card."))
-    entries.append(.newInfoCard(title: "Use new info card", value: state.useNewInfoCard))
-    entries.append(.newInfoCardInfo("Combines profile details in one card and hides the personal channel heading and subscriber count."))
-    entries.append(.newMusic(title: "Use new music player", value: state.useNewMusic))
-    entries.append(.newMusicInfo("Uses the new glass-style music card in the profile."))
-    entries.append(.newButtons(title: "New buttons", value: state.useNewButtons))
-    entries.append(.newButtonsInfo("Displays profile actions as round buttons using the profile colors."))
+    var entries: [CustomizationEntry] = [.profileHeader("ПРОФИЛЬ")]
+    entries.append(.showUserId(title: "Показывать ID пользователя", value: state.showUserId))
+    entries.append(.showUserIdInfo("Отображает числовой идентификатор аккаунта Telegram в карточке информации профиля."))
+    entries.append(.showUserDc(title: "Показывать дата-центр", value: state.showUserDc))
+    entries.append(.showUserDcInfo("Отображает дата-центр (DC), который использует этот аккаунт Telegram, в карточке информации профиля."))
+    entries.append(.newInfoCard(title: "Новая карточка информации", value: state.useNewInfoCard))
+    entries.append(.newInfoCardInfo("Собирает данные профиля в одну карточку и скрывает заголовок личного канала и количество подписчиков."))
+    entries.append(.newMusic(title: "Новый музыкальный плеер", value: state.useNewMusic))
+    entries.append(.newMusicInfo("Использует новую музыкальную карточку-капсулу, которая висит в воздухе между шапкой и профилем."))
+    entries.append(.newButtons(title: "Новые кнопки", value: state.useNewButtons))
+    entries.append(.newButtonsInfo("Отображает действия профиля круглыми кнопками в цветах профиля."))
     if state.useNewButtons {
-        entries.append(.showButtonName(title: "Show button name", value: state.showButtonName))
-        entries.append(.showButtonNameInfo("Shows action names such as call, video, and mute below the buttons."))
+        entries.append(.showButtonName(title: "Показывать подписи кнопок", value: state.showButtonName))
+        entries.append(.showButtonNameInfo("Показывает названия действий — звонок, видео и без звука — под кнопками."))
     }
-    entries.append(.profileBackdropUnderCard(title: "Color glow behind card", value: state.profileBackdropUnderCard))
-    entries.append(.profileBackdropUnderCardInfo("Adds a soft profile-color glow around and behind the information card."))
-    entries.append(.profileBackdropWholeSection(title: "Glow behind the whole section", value: state.profileBackdropWholeSection))
-    entries.append(.profileBackdropWholeSectionInfo("Spreads the profile-color glow around the entire information section, leaving the card itself unchanged."))
-    entries.append(.profileBackdropTransition(title: "Blend into profile background", value: state.profileBackdropTransition))
-    entries.append(.profileBackdropTransitionInfo("Fades the profile-color glow above the card into the profile background."))
-    entries.append(.profileBackdropAvatarColorFallback(title: "Use avatar photo color", value: state.profileBackdropAvatarColorFallback))
-    entries.append(.profileBackdropAvatarColorFallbackInfo("When no profile or gift color exists, extracts an average color from the profile photo."))
+    entries.append(.profileBackdropUnderCard(title: "Переход цвета за карточку", value: state.profileBackdropUnderCard))
+    entries.append(.profileBackdropUnderCardInfo("Цвет профиля плавно переходит из шапки за карточку информации и растворяется к её нижнему краю."))
+    entries.append(.profileBackdropWholeSection(title: "Переход за всю секцию", value: state.profileBackdropWholeSection))
+    entries.append(.profileBackdropWholeSectionInfo("Продлевает переход цвета профиля за нижний край карточки."))
+    entries.append(.profileBackdropTransition(title: "Растворение в фоне", value: state.profileBackdropTransition))
+    entries.append(.profileBackdropTransitionInfo("Цвет профиля переходит из шапки и растворяется в фоне уже над серединой карточки."))
+    entries.append(.profileBackdropAvatarColorFallback(title: "Цвет из фотографии аватара", value: state.profileBackdropAvatarColorFallback))
+    entries.append(.profileBackdropAvatarColorFallbackInfo("Если у профиля нет цвета, берёт средний цвет из фотографии аватара."))
     return entries
 }
 
 private func customizationState() -> CustomizationState {
     let defaults = UserDefaults.standard
-    let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
-    let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
-    let selectedMode: Int
-    if underCard {
-        selectedMode = 0
-    } else if wholeSection {
-        selectedMode = 1
-    } else {
-        selectedMode = 2
-    }
-    let normalizedUnderCard = selectedMode == 0
-    let normalizedWholeSection = selectedMode == 1
-    let normalizedTransition = selectedMode == 2
-    defaults.set(normalizedUnderCard, forKey: "netgramProfileBackdropUnderCard")
-    defaults.set(normalizedWholeSection, forKey: "netgramProfileBackdropWholeSection")
-    defaults.set(normalizedTransition, forKey: "netgramProfileBackdropTransition")
     return CustomizationState(
         showUserId: defaults.bool(forKey: "netgramShowUserId"),
         showUserDc: defaults.bool(forKey: "netgramShowUserDc"),
         useNewMusic: defaults.bool(forKey: "netgramUseNewMusicPlayer"),
-        useNewInfoCard: defaults.object(forKey: "netgramUseNewInfoCard") == nil ? true : defaults.bool(forKey: "netgramUseNewInfoCard"),
+        useNewInfoCard: defaults.bool(forKey: "netgramUseNewInfoCard"),
         useNewButtons: defaults.bool(forKey: "netgramUseNewButtons"),
         showButtonName: defaults.bool(forKey: "netgramShowButtonName"),
-        profileBackdropUnderCard: normalizedUnderCard,
-        profileBackdropWholeSection: normalizedWholeSection,
-        profileBackdropTransition: normalizedTransition,
+        profileBackdropUnderCard: defaults.bool(forKey: "netgramProfileBackdropUnderCard"),
+        profileBackdropWholeSection: defaults.bool(forKey: "netgramProfileBackdropWholeSection"),
+        profileBackdropTransition: defaults.bool(forKey: "netgramProfileBackdropTransition"),
         profileBackdropAvatarColorFallback: defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback")
     )
 }
@@ -306,13 +290,10 @@ private func makeCustomizationSettingsController(context: AccountContext, screen
         toggleProfileBackdropUnderCard: { value in
             let nextState = stateValue.modify { state -> CustomizationState in
                 var updated = state
+                updated.profileBackdropUnderCard = value
                 if value {
-                    updated.profileBackdropUnderCard = true
                     updated.profileBackdropWholeSection = false
                     updated.profileBackdropTransition = false
-                } else if updated.profileBackdropUnderCard {
-                    updated.profileBackdropUnderCard = false
-                    updated.profileBackdropTransition = true
                 }
                 return updated
             }
@@ -325,13 +306,10 @@ private func makeCustomizationSettingsController(context: AccountContext, screen
         toggleProfileBackdropWholeSection: { value in
             let nextState = stateValue.modify { state -> CustomizationState in
                 var updated = state
+                updated.profileBackdropWholeSection = value
                 if value {
                     updated.profileBackdropUnderCard = false
-                    updated.profileBackdropWholeSection = true
                     updated.profileBackdropTransition = false
-                } else if updated.profileBackdropWholeSection {
-                    updated.profileBackdropWholeSection = false
-                    updated.profileBackdropTransition = true
                 }
                 return updated
             }
@@ -344,13 +322,10 @@ private func makeCustomizationSettingsController(context: AccountContext, screen
         toggleProfileBackdropTransition: { value in
             let nextState = stateValue.modify { state -> CustomizationState in
                 var updated = state
+                updated.profileBackdropTransition = value
                 if value {
                     updated.profileBackdropUnderCard = false
                     updated.profileBackdropWholeSection = false
-                    updated.profileBackdropTransition = true
-                } else if updated.profileBackdropTransition {
-                    updated.profileBackdropTransition = false
-                    updated.profileBackdropUnderCard = true
                 }
                 return updated
             }
@@ -366,7 +341,7 @@ private func makeCustomizationSettingsController(context: AccountContext, screen
     let signal = combineLatest(queue: .mainQueue(), context.sharedContext.presentationData, statePromise.get())
     |> map { presentationData, state -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let entries = customizationSettingsEntries(state: state, screen: screen)
-        let title = screen == .root ? "NetGram" : "Profile"
+        let title = screen == .root ? "NetGram" : "Профиль"
         let controllerState = ItemListControllerState(presentationData: ItemListPresentationData(presentationData), title: .text(title), leftNavigationButton: nil, rightNavigationButton: nil, backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back))
         let listState = ItemListNodeState(presentationData: ItemListPresentationData(presentationData), entries: entries, style: .blocks)
         return (controllerState, (listState, arguments))

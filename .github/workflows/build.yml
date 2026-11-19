@@ -61,7 +61,7 @@ jobs:
           export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
           # NetGram has its own version line; do not reuse Telegram's official
           # build numbering (commit count + offset).
-          export BUILD_NUMBER="0.0.12"
+          export BUILD_NUMBER="0.0.13"
           echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
           echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
 
@@ -109,17 +109,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: build-${{ env.BUILD_NUMBER }}
-          # Название релиза и «Что нового» обновлены для NetGram 0.0.12.
+          # Название релиза и «Что нового» обновлены для NetGram 0.0.13.
           release_name: NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
           body: |
             NetGram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }}) — unsigned build, re-sign to install.
 
             ## Что нового
-            - Цвет профиля теперь даёт мягкое свечение позади карточки «Об аккаунте», не перекрашивая саму карточку и её стекло.
-            - Кнопки действий нового вида получили настоящее стеклянное оформление Liquid Glass, увеличенный размер и ровное положение значков и подписей.
-            - Для строк User ID и Data Center добавлено контекстное меню копирования.
-            - Исправлено положение и оформление музыкальной карточки; при выключении нового плеера возвращается исходный вид.
-            - Новый вид карточки информации включён по умолчанию.
+            - Цвет профиля теперь перетекает из шапки за карточку информации плавным переходом и растворяется к её низу; сама карточка не перекрашивается.
+            - Музыкальная карточка нового плеера стала компактной капсулой, которая висит в воздухе между шапкой и профилем.
+            - Настройки NetGram переведены на русский язык.
+            - После установки NetGram весь дополнительный функционал по умолчанию выключен — включайте только то, что нужно, в настройках NetGram.
           draft: false
           prerelease: true
 

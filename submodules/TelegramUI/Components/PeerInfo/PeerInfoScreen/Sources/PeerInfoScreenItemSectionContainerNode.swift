@@ -176,28 +176,26 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
             glassBackgroundView.update(size: glassFrame.size, cornerRadius: 20.0, isDark: dark, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: glassTintColor ?? UIColor(white: 0.5, alpha: 1.0)), innerColor: nil, innerInset: 3.0), transition: componentTransition)
         }
         if let profileBackdropColor, let profileBackdropView = self.profileBackdropView {
-            let cardFrame = CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset), size: CGSize(width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset)))
-            let spread: CGFloat
-            let intensity: CGFloat
+            let cardHeight = max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset)
+            // The passed extension is the gap between the header band and this section; the
+            // backdrop starts right at the band's bottom edge, above the section's own origin.
+            let topExtension = profileBackdropTopExtension + contentWithBackgroundOffset
+            let fadeEnd: CGFloat
             switch profileBackdropMode {
             case 1:
-                spread = 26.0
-                intensity = 0.9
+                // The colour reaches past the bottom of the card, into the section spacing.
+                fadeEnd = cardHeight + 24.0
+            case 2:
+                // The colour dissolves into the background above the middle of the card.
+                fadeEnd = cardHeight * 0.45
             default:
-                spread = 12.0
-                intensity = 0.55
+                // The colour fades out by the bottom of the card.
+                fadeEnd = cardHeight
             }
-            let fadeHeight = profileBackdropMode == 2 ? min(profileBackdropTopExtension, contentWithBackgroundOffset) : 0.0
-            let backdropFrame = cardFrame.insetBy(dx: -spread, dy: -spread).union(CGRect(x: cardFrame.minX, y: cardFrame.minY - fadeHeight, width: cardFrame.width, height: fadeHeight))
+            let backdropHeight = topExtension + max(0.0, fadeEnd)
+            let backdropFrame = CGRect(x: -12.0, y: contentWithBackgroundOffset - topExtension, width: width + 24.0, height: backdropHeight)
             profileBackdropView.frame = backdropFrame
-            profileBackdropView.update(
-                cardFrame: cardFrame.offsetBy(dx: -backdropFrame.minX, dy: -backdropFrame.minY),
-                color: profileBackdropColor,
-                cornerRadius: 20.0,
-                spread: spread,
-                intensity: intensity,
-                fadeHeight: fadeHeight
-            )
+            profileBackdropView.update(size: backdropFrame.size, color: profileBackdropColor, backgroundColor: presentationData.theme.list.blocksBackgroundColor)
         }
         
         if contentHeight.isZero {

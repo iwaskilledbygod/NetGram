@@ -3033,7 +3033,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
         let fallbackEnabled = defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback")
         let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
         let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
-        let modeEnabled = underCard || wholeSection || (defaults.object(forKey: "netgramProfileBackdropTransition") == nil ? true : defaults.bool(forKey: "netgramProfileBackdropTransition"))
+        let modeEnabled = underCard || wholeSection || defaults.bool(forKey: "netgramProfileBackdropTransition")
         let hasProfileColor: Bool
         if let peer, case .user = peer {
             if let status = peer.emojiStatus, case .starGift = status.content {
@@ -5848,8 +5848,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                     let defaults = UserDefaults.standard
                     let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
                     let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
-                    let hasTransitionValue = defaults.object(forKey: "netgramProfileBackdropTransition") != nil
-                    let transition = hasTransitionValue ? defaults.bool(forKey: "netgramProfileBackdropTransition") : !underCard && !wholeSection
+                    let transition = defaults.bool(forKey: "netgramProfileBackdropTransition")
                     if underCard {
                         profileBackdropMode = 0
                     } else if wholeSection {
@@ -5857,8 +5856,11 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                     } else if transition {
                         profileBackdropMode = 2
                     }
+                    let backdropEnabled = underCard || wholeSection || transition
                     let coverColors: (UIColor, UIColor)?
-                    if let status = peer.emojiStatus, case let .starGift(_, _, _, _, _, innerColor, outerColor, _, _) = status.content {
+                    if !backdropEnabled {
+                        coverColors = nil
+                    } else if let status = peer.emojiStatus, case let .starGift(_, _, _, _, _, innerColor, outerColor, _, _) = status.content {
                         coverColors = (UIColor(rgb: UInt32(bitPattern: innerColor)), UIColor(rgb: UInt32(bitPattern: outerColor)))
                     } else if let profileColor = peer.effectiveProfileColor {
                         let colors = self.context.peerNameColors.getProfile(profileColor, dark: self.presentationData.theme.overallDarkAppearance)
@@ -5869,9 +5871,10 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                         coverColors = nil
                     }
                     if let coverColors {
-                        let blendedCoverColor = coverColors.0.mixedWith(coverColors.1, alpha: 0.35)
+                        // The header cover gradient ends with the main profile colour, so the
+                        // backdrop behind the card starts with the same colour and fades down.
                         glassTintColor = UIColor(white: 1.0, alpha: 0.12)
-                        profileBackdropColor = blendedCoverColor
+                        profileBackdropColor = coverColors.0
                         profileBackdropTopExtension = min(36.0, sectionSpacing + 12.0)
                     }
                 }

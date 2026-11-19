@@ -706,7 +706,13 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         }
         let musicHeight: CGFloat = hasBackground || self.isAvatarExpanded ? 24.0 : 16.0
         let useNewMusicPlayer = UserDefaults.standard.bool(forKey: "netgramUseNewMusicPlayer")
-        let bottomInset: CGFloat = currentSavedMusic != nil ? musicHeight : 0.0
+        let musicFloatsInAir = useNewMusicPlayer && (hasBackground || self.isAvatarExpanded)
+        let bottomInset: CGFloat
+        if currentSavedMusic != nil {
+            bottomInset = musicHeight + (musicFloatsInAir ? 20.0 : 0.0)
+        } else {
+            bottomInset = 0.0
+        }
         let balanceInset: CGFloat = currentWalletBalance != nil ? 32.0 : 0.0
         
         let isLandscape = containerInset > 16.0
@@ -2722,42 +2728,15 @@ final class PeerInfoHeaderNode: ASDisplayNode {
             if useNewMusicPlayer && (hasBackground || self.isAvatarExpanded) {
                 if self.musicBackground == nil {
                     musicTransition = .immediate
-                }
-                let musicBackground = self.musicBackground ?? {
                     let musicBackground = GlassBackgroundView()
                     musicBackground.isUserInteractionEnabled = false
+                    musicBackground.layer.masksToBounds = true
                     self.regularContentNode.view.addSubview(musicBackground)
                     self.musicBackground = musicBackground
                     if transition.isAnimated {
                         musicBackground.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
                     }
-                    return musicBackground
-                }()
-                let cardHorizontalInset: CGFloat = 18.0
-                let musicBandWidth = max(0.0, backgroundFrame.width - stripLeft - stripRight)
-                let cardSize = CGSize(width: max(0.0, musicBandWidth - cardHorizontalInset * 2.0), height: musicHeight)
-                let cardFrame = CGRect(
-                    origin: CGPoint(
-                        x: stripLeft + cardHorizontalInset,
-                        y: musicLayoutHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel
-                    ),
-                    size: cardSize
-                )
-                musicTransition.updateFrame(view: musicBackground, frame: cardFrame)
-                musicBackground.layer.masksToBounds = true
-                musicBackground.update(
-                    size: cardSize,
-                    cornerRadius: musicHeight * 0.5,
-                    isDark: presentationData.theme.overallDarkAppearance,
-                    tintColor: GlassBackgroundView.TintColor(
-                        kind: .custom(style: .default, color: contentButtonBackgroundColor.withAlphaComponent(presentationData.theme.overallDarkAppearance ? 0.36 : 0.28)),
-                        innerColor: contentButtonBackgroundColor.withAlphaComponent(0.34),
-                        innerInset: 1.0
-                    ),
-                    isInteractive: false,
-                    transition: ComponentTransition(musicTransition)
-                )
-                musicTransition.updateAlpha(layer: musicBackground.layer, alpha: 1.0)
+                }
             } else if let musicBackground = self.musicBackground {
                 self.musicBackground = nil
                 musicBackground.layer.removeAllAnimations()
@@ -2772,6 +2751,9 @@ final class PeerInfoHeaderNode: ASDisplayNode {
 
             let isOverlay = self.isAvatarExpanded || hasBackground
             let musicOverlay = useNewMusicPlayer && isOverlay
+            // The new player renders as a compact capsule that hangs in the air instead of
+            // stretching across the whole band.
+            let musicCapsuleHeight: CGFloat = musicOverlay ? 32.0 : musicHeight
             let stripSecondaryColor = hasCoverColor && musicOverlay ? navigationContentsSecondaryColor.mixedWith(.white, alpha: 0.45) : navigationContentsSecondaryColor
             let musicBandWidth = max(0.0, backgroundFrame.width - stripLeft - stripRight)
             if let currentSavedMusic {
@@ -2825,7 +2807,8 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                                     )
                                 ], spacing: 4.0)
                             ),
-                            minSize: CGSize(width: musicBandWidth, height: musicHeight),
+                            minSize: CGSize(width: musicOverlay ? 0.0 : musicBandWidth, height: musicCapsuleHeight),
+                            contentInsets: musicOverlay ? UIEdgeInsets(top: 6.0, left: 14.0, bottom: 6.0, right: 12.0) : UIEdgeInsets(),
                             action: { [weak self] in
                                 self?.displaySavedMusic?()
                             },
@@ -2834,14 +2817,37 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                         )
                     ),
                     environment: {},
-                    containerSize: CGSize(width: musicBandWidth, height: musicHeight)
+                    containerSize: CGSize(width: musicBandWidth, height: musicCapsuleHeight)
                 )
-                let musicFrame = CGRect(origin: CGPoint(x: stripLeft, y: musicLayoutHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel), size: musicSize)
+                let musicFrame: CGRect
+                if musicOverlay {
+                    // A free-floating capsule, centred above the bottom edge of the band.
+                    musicFrame = CGRect(
+                        origin: CGPoint(
+                            x: stripLeft + floor((width - stripLeft - stripRight - musicSize.width) * 0.5),
+                            y: musicLayoutHeight - musicCapsuleHeight - 10.0
+                        ),
+                        size: musicSize
+                    )
+                } else {
+                    musicFrame = CGRect(origin: CGPoint(x: stripLeft, y: musicLayoutHeight - musicHeight - (hasBackground || self.isAvatarExpanded ? 0.0 : 4.0) + 1.0 - UIScreenPixel), size: musicSize)
+                }
                 if let musicBackground = self.musicBackground {
-                    let cardHorizontalInset: CGFloat = 18.0
-                    let cardWidth = max(0.0, musicBandWidth - cardHorizontalInset * 2.0)
-                    let cardFrame = CGRect(x: stripLeft + cardHorizontalInset, y: musicFrame.minY, width: cardWidth, height: musicHeight)
-                    musicTransition.updateFrame(view: musicBackground, frame: cardFrame)
+                    musicTransition.updateFrame(view: musicBackground, frame: musicFrame)
+                    musicBackground.layer.masksToBounds = true
+                    musicBackground.update(
+                        size: musicFrame.size,
+                        cornerRadius: musicFrame.height * 0.5,
+                        isDark: presentationData.theme.overallDarkAppearance,
+                        tintColor: GlassBackgroundView.TintColor(
+                            kind: .custom(style: .default, color: contentButtonBackgroundColor.withAlphaComponent(presentationData.theme.overallDarkAppearance ? 0.36 : 0.28)),
+                            innerColor: contentButtonBackgroundColor.withAlphaComponent(0.34),
+                            innerInset: 1.0
+                        ),
+                        isInteractive: false,
+                        transition: ComponentTransition(musicTransition)
+                    )
+                    musicTransition.updateAlpha(layer: musicBackground.layer, alpha: 1.0)
                 }
                 if let musicView = music.view {
                     self.regularContentNode.accessibilityTrailingView = musicView
