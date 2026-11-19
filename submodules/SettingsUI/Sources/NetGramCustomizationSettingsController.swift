@@ -231,12 +231,12 @@ private func customizationSettingsEntries(state: CustomizationState, screen: Cus
         entries.append(.showButtonName(title: "Show button name", value: state.showButtonName))
         entries.append(.showButtonNameInfo("Shows action names such as call, video, and mute below the buttons."))
     }
-    entries.append(.profileBackdropUnderCard(title: "Color background below card", value: state.profileBackdropUnderCard))
-    entries.append(.profileBackdropUnderCardInfo("Colors the area around the information card with the profile color gradient."))
-    entries.append(.profileBackdropWholeSection(title: "Color the whole section", value: state.profileBackdropWholeSection))
-    entries.append(.profileBackdropWholeSectionInfo("Extends the profile color treatment across the full information section, including its glass card."))
+    entries.append(.profileBackdropUnderCard(title: "Color glow behind card", value: state.profileBackdropUnderCard))
+    entries.append(.profileBackdropUnderCardInfo("Adds a soft profile-color glow around and behind the information card."))
+    entries.append(.profileBackdropWholeSection(title: "Glow behind the whole section", value: state.profileBackdropWholeSection))
+    entries.append(.profileBackdropWholeSectionInfo("Spreads the profile-color glow around the entire information section, leaving the card itself unchanged."))
     entries.append(.profileBackdropTransition(title: "Blend into profile background", value: state.profileBackdropTransition))
-    entries.append(.profileBackdropTransitionInfo("Adds a color transition between the profile header and information section."))
+    entries.append(.profileBackdropTransitionInfo("Fades the profile-color glow above the card into the profile background."))
     entries.append(.profileBackdropAvatarColorFallback(title: "Use avatar photo color", value: state.profileBackdropAvatarColorFallback))
     entries.append(.profileBackdropAvatarColorFallbackInfo("When no profile or gift color exists, extracts an average color from the profile photo."))
     return entries

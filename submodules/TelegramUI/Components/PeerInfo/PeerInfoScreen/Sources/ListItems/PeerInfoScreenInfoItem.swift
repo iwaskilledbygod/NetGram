@@ -16,7 +16,7 @@ final class PeerInfoScreenInfoItem: PeerInfoScreenItem {
     let isWarning: Bool
     let style: InfoListItem.InfoStyle
     let linkAction: ((InfoListItemLinkAction) -> Void)?
- 
+
     init(
         id: AnyHashable,
         title: String,

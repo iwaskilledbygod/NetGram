@@ -5870,7 +5870,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                     }
                     if let coverColors {
                         let blendedCoverColor = coverColors.0.mixedWith(coverColors.1, alpha: 0.35)
-                        glassTintColor = UIColor(white: 1.0, alpha: 0.72).blitOver(blendedCoverColor, alpha: 1.0)
+                        glassTintColor = UIColor(white: 1.0, alpha: 0.12)
                         profileBackdropColor = blendedCoverColor
                         profileBackdropTopExtension = min(36.0, sectionSpacing + 12.0)
                     }

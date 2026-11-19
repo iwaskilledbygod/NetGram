@@ -64,7 +64,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         }
 
         if glassTintColor != nil {
-            self.backgroundNode.backgroundColor = profileBackdropMode == 1 ? (profileBackdropColor ?? .clear) : .clear
+            self.backgroundNode.backgroundColor = .clear
             self.topSeparatorNode.backgroundColor = .clear
             self.bottomSeparatorNode.backgroundColor = .clear
 
@@ -162,13 +162,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         }
         
         transition.updateFrame(node: self.itemContainerNode, frame: CGRect(origin: CGPoint(), size: CGSize(width: width, height: contentHeight)))
-        let sectionBackgroundColor: UIColor
-        if profileBackdropMode == 1, let profileBackdropColor {
-            sectionBackgroundColor = profileBackdropColor
-        } else {
-            sectionBackgroundColor = presentationData.theme.list.itemBlocksBackgroundColor
-        }
-        self.backgroundNode.backgroundColor = sectionBackgroundColor
+        self.backgroundNode.backgroundColor = glassTintColor != nil ? .clear : presentationData.theme.list.itemBlocksBackgroundColor
         transition.updateFrame(node: self.backgroundNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset), size: CGSize(width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset))))
         transition.updateFrame(node: self.topSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset - UIScreenPixel), size: CGSize(width: width, height: UIScreenPixel)))
         transition.updateFrame(node: self.bottomSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundHeight), size: CGSize(width: width, height: UIScreenPixel)))
@@ -182,30 +176,28 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
             glassBackgroundView.update(size: glassFrame.size, cornerRadius: 20.0, isDark: dark, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: glassTintColor ?? UIColor(white: 0.5, alpha: 1.0)), innerColor: nil, innerInset: 3.0), transition: componentTransition)
         }
         if let profileBackdropColor, let profileBackdropView = self.profileBackdropView {
-            let backdropFrame: CGRect
+            let cardFrame = CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset), size: CGSize(width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset)))
+            let spread: CGFloat
+            let intensity: CGFloat
             switch profileBackdropMode {
-            case 0:
-                backdropFrame = CGRect(x: 0.0, y: contentWithBackgroundOffset, width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset))
             case 1:
-                backdropFrame = CGRect(x: 0.0, y: contentWithBackgroundOffset, width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset))
+                spread = 26.0
+                intensity = 0.9
             default:
-                let topExtension = min(profileBackdropTopExtension, contentWithBackgroundOffset)
-                backdropFrame = CGRect(x: 0.0, y: contentWithBackgroundOffset - topExtension, width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset) + topExtension)
+                spread = 12.0
+                intensity = 0.55
             }
+            let fadeHeight = profileBackdropMode == 2 ? min(profileBackdropTopExtension, contentWithBackgroundOffset) : 0.0
+            let backdropFrame = cardFrame.insetBy(dx: -spread, dy: -spread).union(CGRect(x: cardFrame.minX, y: cardFrame.minY - fadeHeight, width: cardFrame.width, height: fadeHeight))
             profileBackdropView.frame = backdropFrame
-            profileBackdropView.update(size: backdropFrame.size, color: profileBackdropColor, backgroundColor: presentationData.theme.list.itemBlocksBackgroundColor)
-            if profileBackdropMode == 2 {
-                profileBackdropView.layer.mask = nil
-                let mask = CAGradientLayer()
-                mask.frame = profileBackdropView.bounds
-                mask.startPoint = CGPoint(x: 0.5, y: 0.0)
-                mask.endPoint = CGPoint(x: 0.5, y: 1.0)
-                mask.colors = [UIColor.black.cgColor, UIColor.black.cgColor, UIColor.clear.cgColor]
-                mask.locations = [0.0, 0.4, 1.0]
-                profileBackdropView.layer.mask = mask
-            } else {
-                profileBackdropView.layer.mask = nil
-            }
+            profileBackdropView.update(
+                cardFrame: cardFrame.offsetBy(dx: -backdropFrame.minX, dy: -backdropFrame.minY),
+                color: profileBackdropColor,
+                cornerRadius: 20.0,
+                spread: spread,
+                intensity: intensity,
+                fadeHeight: fadeHeight
+            )
         }
         
         if contentHeight.isZero {
