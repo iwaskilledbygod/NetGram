@@ -63,6 +63,9 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
     
     let backgroundContainerView: UIView
     let backgroundView: UIView
+    // The material has to live in a rendered layer: backgroundContainerView is
+    // content of the shared blur mask, so anything drawn there stays invisible.
+    private let glassContainerView: UIView
     private var glassBackgroundView: GlassBackgroundView?
     
     init(key: PeerInfoHeaderButtonKey, action: @escaping (PeerInfoHeaderButtonNode, ContextGesture?) -> Void) {
@@ -79,6 +82,9 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         self.backgroundContainerView.addSubview(self.backgroundView)
         self.referenceNode.additionalContextMenuSourceViews = [self.backgroundView]
         
+        self.glassContainerView = UIView()
+        self.glassContainerView.isUserInteractionEnabled = false
+
         /*self.backgroundNode = NavigationBackgroundNode(color: UIColor(white: 1.0, alpha: 0.2), enableBlur: true, enableSaturation: false)
         self.backgroundNode.isUserInteractionEnabled = false*/
         
@@ -103,6 +109,8 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         self.referenceNode.addSubnode(self.contentNode)
         self.contentNode.addSubnode(self.iconNode)
         self.addSubnode(self.containerNode)
+        // Below the foreground content, but in a rendered view of its own.
+        self.view.insertSubview(self.glassContainerView, at: 0)
         self.contentNode.addSubnode(self.textNode)
         
         self.highligthedChanged = { [weak self] highlighted in
@@ -328,9 +336,26 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         let backgroundY: CGFloat = size.height * (1.0 - fraction)
         let backgroundFrame = CGRect(origin: CGPoint(x: 0.0, y: backgroundY), size: CGSize(width: size.width, height: max(0.0, size.height - backgroundY)))
         //transition.updateFrame(node: self.backgroundNode, frame: backgroundFrame)
+        // The icon and its name are laid out as one block and centred in the
+        // button, so enabling the name no longer pushes the icon around.
+        let iconSide = useNewButtons ? 34.0 : iconSize.width
+        let displayedIconSize = CGSize(width: min(iconSize.width, iconSide), height: min(iconSize.height, iconSide))
+        let titleGap: CGFloat = 4.0
+        let iconFrame: CGRect
+        let titleFrame: CGRect
+        if useNewButtons {
+            let groupHeight = displayedIconSize.height + (titleSize.height > 0.0 ? titleGap + titleSize.height : 0.0)
+            let groupTop = floor((size.height - groupHeight) * 0.5)
+            iconFrame = CGRect(origin: CGPoint(x: floor((size.width - displayedIconSize.width) / 2.0), y: groupTop), size: displayedIconSize)
+            titleFrame = CGRect(origin: CGPoint(x: floor((size.width - titleSize.width) / 2.0), y: groupTop + displayedIconSize.height + titleGap), size: titleSize)
+        } else {
+            iconFrame = CGRect(origin: CGPoint(x: floor((size.width - displayedIconSize.width) / 2.0), y: 1.0), size: displayedIconSize)
+            titleFrame = CGRect(origin: CGPoint(x: floor((size.width - titleSize.width) / 2.0), y: size.height - titleSize.height - 9.0), size: titleSize)
+        }
         let visibleBackgroundFrame: CGRect
         if useNewButtons {
-            let diameter = min(size.width, 48.0) * fraction
+            let maximumDiameter: CGFloat = showButtonName ? 56.0 : 64.0
+            let diameter = min(size.width, min(size.height, maximumDiameter)) * fraction
             visibleBackgroundFrame = CGRect(x: floor((size.width - diameter) * 0.5), y: floor((size.height - diameter) * 0.5), width: diameter, height: diameter)
         } else {
             visibleBackgroundFrame = backgroundFrame
@@ -353,13 +378,18 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
                 glassBackgroundView = GlassBackgroundView(frame: CGRect())
                 glassBackgroundView.isUserInteractionEnabled = false
                 self.glassBackgroundView = glassBackgroundView
-                self.backgroundContainerView.insertSubview(glassBackgroundView, at: 0)
+                self.glassContainerView.addSubview(glassBackgroundView)
             }
-            transition.updateFrame(view: glassBackgroundView, frame: visibleBackgroundFrame)
-            glassBackgroundView.update(size: visibleBackgroundFrame.size, cornerRadius: cornerRadius, isDark: presentationData.theme.overallDarkAppearance, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .clear, color: backgroundColor.withAlphaComponent(0.22))), transition: ComponentTransition(transition))
-        } else if let glassBackgroundView = self.glassBackgroundView {
-            self.glassBackgroundView = nil
-            glassBackgroundView.removeFromSuperview()
+            self.glassContainerView.isHidden = false
+            transition.updateFrame(view: self.glassContainerView, frame: visibleBackgroundFrame)
+            transition.updateFrame(view: glassBackgroundView, frame: CGRect(origin: CGPoint(), size: visibleBackgroundFrame.size))
+            glassBackgroundView.update(size: visibleBackgroundFrame.size, cornerRadius: cornerRadius, isDark: presentationData.theme.overallDarkAppearance, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: backgroundColor.withAlphaComponent(presentationData.theme.overallDarkAppearance ? 0.36 : 0.28)), innerColor: backgroundColor.withAlphaComponent(0.34), innerInset: 1.0), transition: ComponentTransition(transition))
+        } else {
+            self.glassContainerView.isHidden = true
+            if let glassBackgroundView = self.glassBackgroundView {
+                self.glassBackgroundView = nil
+                glassBackgroundView.removeFromSuperview()
+            }
         }
         // The context source contains only the foreground; its backdrop is a
         // separate shared-blur mask. Match both its rounded shape and its visible
@@ -367,14 +397,11 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         self.referenceNode.contextMenuSourcePath = UIBezierPath(roundedRect: visibleBackgroundFrame, cornerRadius: cornerRadius)
         //self.backgroundNode.update(size: backgroundFrame.size, cornerRadius: min(11.0, backgroundFrame.height * 0.5), transition: transition)
         //self.backgroundNode.updateColor(color: backgroundColor, transition: transition)
-        let displayedIconSize = CGSize(width: min(iconSize.width, useNewButtons ? 30.0 : iconSize.width), height: min(iconSize.height, useNewButtons ? 30.0 : iconSize.height))
-        let iconY = useNewButtons ? max(0.0, (size.height - displayedIconSize.height - (showButtonName ? titleSize.height + 5.0 : 0.0)) * 0.5) : 1.0
-        transition.updateFrame(node: self.iconNode, frame: CGRect(origin: CGPoint(x: floor((size.width - displayedIconSize.width) / 2.0), y: iconY), size: displayedIconSize))
+        transition.updateFrame(node: self.iconNode, frame: iconFrame)
         if let animatedIconView = self.animatedIcon?.view {
-            transition.updateFrame(view: animatedIconView, frame: CGRect(origin: CGPoint(x: floor((size.width - displayedIconSize.width) / 2.0), y: iconY), size: displayedIconSize))
+            transition.updateFrame(view: animatedIconView, frame: iconFrame)
         }
-        let titleY = useNewButtons ? size.height - titleSize.height - 1.0 : size.height - titleSize.height - 9.0
-        transition.updateFrameAdditiveToCenter(node: self.textNode, frame: CGRect(origin: CGPoint(x: floor((size.width - titleSize.width) / 2.0), y: titleY), size: titleSize))
+        transition.updateFrameAdditiveToCenter(node: self.textNode, frame: titleFrame)
         
         self.referenceNode.frame = self.containerNode.bounds
         self.updateContextMenuBackground()
