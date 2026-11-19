@@ -37,7 +37,12 @@ final class PeerInfoProfileBackdropGradientView: UIView {
         let holdLocation = max(0.0, min(1.0, hold / height))
         let middleLocation = max(holdLocation, min(1.0, (hold + (height - hold) * 0.5) / height))
         self.gradientLayer.colors = [topColor.cgColor, topColor.cgColor, middleColor.cgColor, backgroundColor.cgColor]
-        self.gradientLayer.locations = [0.0, holdLocation, middleLocation, 1.0]
+        self.gradientLayer.locations = [
+            NSNumber(value: 0.0),
+            NSNumber(value: Double(holdLocation)),
+            NSNumber(value: Double(middleLocation)),
+            NSNumber(value: 1.0)
+        ]
 
         CATransaction.commit()
     }
