@@ -39,7 +39,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         self.addSubnode(self.bottomSeparatorNode)
     }
     
-    func update(context: AccountContext, width: CGFloat, safeInsets: UIEdgeInsets, hasCorners: Bool, presentationData: PresentationData, items: [PeerInfoScreenItem], transition: ContainedViewLayoutTransition, glassTintColor: UIColor? = nil, profileBackdropColor: UIColor? = nil, profileBackdropMode: Int = 0, profileBackdropTopExtension: CGFloat = 0.0) -> CGFloat {
+    func update(context: AccountContext, width: CGFloat, safeInsets: UIEdgeInsets, hasCorners: Bool, presentationData: PresentationData, items: [PeerInfoScreenItem], transition: ContainedViewLayoutTransition, glassTintColor: UIColor? = nil, profileBackdropColor: UIColor? = nil, profileBackdropTopExtension: CGFloat = 0.0, profileBackdropHold: CGFloat = 0.0, profileBackdropSideInset: CGFloat = 0.0) -> CGFloat {
         self.backgroundNode.backgroundColor = presentationData.theme.list.itemBlocksBackgroundColor
         self.topSeparatorNode.backgroundColor = presentationData.theme.list.itemBlocksSeparatorColor
         self.bottomSeparatorNode.backgroundColor = presentationData.theme.list.itemBlocksSeparatorColor
@@ -177,25 +177,22 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         }
         if let profileBackdropColor, let profileBackdropView = self.profileBackdropView {
             let cardHeight = max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset)
-            // The passed extension is the gap between the header band and this section; the
-            // backdrop starts right at the band's bottom edge, above the section's own origin.
-            let topExtension = profileBackdropTopExtension + contentWithBackgroundOffset
-            let fadeEnd: CGFloat
-            switch profileBackdropMode {
-            case 1:
-                // The colour reaches past the bottom of the card, into the section spacing.
-                fadeEnd = cardHeight + 24.0
-            case 2:
-                // The colour dissolves into the background above the middle of the card.
-                fadeEnd = cardHeight * 0.45
-            default:
-                // The colour fades out by the bottom of the card.
-                fadeEnd = cardHeight
-            }
-            let backdropHeight = topExtension + max(0.0, fadeEnd)
-            let backdropFrame = CGRect(x: -12.0, y: contentWithBackgroundOffset - topExtension, width: width + 24.0, height: backdropHeight)
+            // The extension covers the gap between the header band and this section plus an
+            // overlap that stays hidden behind the band; the side inset spans the full display
+            // width so no light strips are left at the screen edges.
+            let backdropFrame = CGRect(
+                x: -profileBackdropSideInset,
+                y: contentWithBackgroundOffset - profileBackdropTopExtension,
+                width: width + profileBackdropSideInset * 2.0,
+                height: profileBackdropTopExtension + cardHeight
+            )
             profileBackdropView.frame = backdropFrame
-            profileBackdropView.update(size: backdropFrame.size, color: profileBackdropColor, backgroundColor: presentationData.theme.list.blocksBackgroundColor)
+            profileBackdropView.update(
+                size: backdropFrame.size,
+                color: profileBackdropColor,
+                backgroundColor: presentationData.theme.list.blocksBackgroundColor,
+                hold: profileBackdropHold
+            )
         }
         
         if contentHeight.isZero {

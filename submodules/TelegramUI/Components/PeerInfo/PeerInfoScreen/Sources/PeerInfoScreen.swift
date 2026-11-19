@@ -3031,9 +3031,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
     private func updateProfileBackdropAvatarColor(for peer: EnginePeer?) {
         let defaults = UserDefaults.standard
         let fallbackEnabled = defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback")
-        let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
-        let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
-        let modeEnabled = underCard || wholeSection || defaults.bool(forKey: "netgramProfileBackdropTransition")
+        let modeEnabled = defaults.bool(forKey: "netgramProfileBackdropTransition")
         let hasProfileColor: Bool
         if let peer, case .user = peer {
             if let status = peer.emojiStatus, case .starGift = status.content {
@@ -5842,40 +5840,43 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
 
                 var glassTintColor: UIColor?
                 var profileBackdropColor: UIColor?
-                var profileBackdropMode = 0
                 var profileBackdropTopExtension: CGFloat = 0.0
+                var profileBackdropHold: CGFloat = 0.0
+                var profileBackdropSideInset: CGFloat = 0.0
                 if !self.isSettings, let infoSectionId = sectionId.base as? InfoSection, infoSectionId == .peerInfo, let peer = self.data?.peer, case .user = peer, !self.state.isEditing {
                     let defaults = UserDefaults.standard
-                    let underCard = defaults.bool(forKey: "netgramProfileBackdropUnderCard")
-                    let wholeSection = defaults.bool(forKey: "netgramProfileBackdropWholeSection")
-                    let transition = defaults.bool(forKey: "netgramProfileBackdropTransition")
-                    if underCard {
-                        profileBackdropMode = 0
-                    } else if wholeSection {
-                        profileBackdropMode = 1
-                    } else if transition {
-                        profileBackdropMode = 2
-                    }
-                    let backdropEnabled = underCard || wholeSection || transition
-                    let coverColors: (UIColor, UIColor)?
-                    if !backdropEnabled {
-                        coverColors = nil
-                    } else if let status = peer.emojiStatus, case let .starGift(_, _, _, _, _, innerColor, outerColor, _, _) = status.content {
-                        coverColors = (UIColor(rgb: UInt32(bitPattern: innerColor)), UIColor(rgb: UInt32(bitPattern: outerColor)))
-                    } else if let profileColor = peer.effectiveProfileColor {
-                        let colors = self.context.peerNameColors.getProfile(profileColor, dark: self.presentationData.theme.overallDarkAppearance)
-                        coverColors = (colors.main, colors.secondary ?? colors.main)
-                    } else if defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback"), let avatarColor = self.profileBackdropAvatarColor {
-                        coverColors = (avatarColor, avatarColor.mixedWith(self.presentationData.theme.list.blocksBackgroundColor, alpha: 0.25))
-                    } else {
-                        coverColors = nil
-                    }
-                    if let coverColors {
-                        // The header cover gradient ends with the main profile colour, so the
-                        // backdrop behind the card starts with the same colour and fades down.
-                        glassTintColor = UIColor(white: 1.0, alpha: 0.12)
-                        profileBackdropColor = coverColors.0
-                        profileBackdropTopExtension = min(36.0, sectionSpacing + 12.0)
+                    if defaults.bool(forKey: "netgramProfileBackdropTransition") {
+                        let coverColors: (UIColor, UIColor)?
+                        if let status = peer.emojiStatus, case let .starGift(_, _, _, _, _, innerColor, outerColor, _, _) = status.content {
+                            coverColors = (UIColor(rgb: UInt32(bitPattern: innerColor)), UIColor(rgb: UInt32(bitPattern: outerColor)))
+                        } else if let profileColor = peer.effectiveProfileColor {
+                            let colors = self.context.peerNameColors.getProfile(profileColor, dark: self.presentationData.theme.overallDarkAppearance)
+                            coverColors = (colors.main, colors.secondary ?? colors.main)
+                        } else if defaults.bool(forKey: "netgramProfileBackdropAvatarColorFallback"), let avatarColor = self.profileBackdropAvatarColor {
+                            coverColors = (avatarColor, avatarColor.mixedWith(self.presentationData.theme.list.blocksBackgroundColor, alpha: 0.25))
+                        } else {
+                            coverColors = nil
+                        }
+                        if let coverColors {
+                            var isGiftCover = false
+                            var hasCoverBand = false
+                            if let status = peer.emojiStatus, case .starGift = status.content {
+                                isGiftCover = true
+                                hasCoverBand = true
+                            } else if peer.effectiveProfileColor != nil {
+                                hasCoverBand = true
+                            }
+                            // The header cover's bottom edge carries the main profile colour for
+                            // profile colours and the outer colour for gift covers, so the
+                            // transition starts with the matching one. The top of the backdrop
+                            // stays solid behind the band, keeping the seam hidden.
+                            let hold: CGFloat = hasCoverBand ? 220.0 : 0.0
+                            glassTintColor = UIColor(white: 1.0, alpha: 0.12)
+                            profileBackdropColor = isGiftCover ? coverColors.1 : coverColors.0
+                            profileBackdropTopExtension = (sectionSpacing + 12.0) + hold
+                            profileBackdropHold = hold
+                            profileBackdropSideInset = insets.left
+                        }
                     }
                 }
                 if isFirstSection && sectionItems.first is PeerInfoScreenHeaderItem && !self.state.isEditing {
@@ -5883,7 +5884,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                         contentHeight -= 16.0
                     }
                 }
-                let sectionHeight = sectionNode.update(context: self.context, width: sectionWidth, safeInsets: UIEdgeInsets(), hasCorners: !insets.left.isZero, presentationData: self.presentationData, items: sectionItems, transition: transition, glassTintColor: glassTintColor, profileBackdropColor: profileBackdropColor, profileBackdropMode: profileBackdropMode, profileBackdropTopExtension: profileBackdropTopExtension)
+                let sectionHeight = sectionNode.update(context: self.context, width: sectionWidth, safeInsets: UIEdgeInsets(), hasCorners: !insets.left.isZero, presentationData: self.presentationData, items: sectionItems, transition: transition, glassTintColor: glassTintColor, profileBackdropColor: profileBackdropColor, profileBackdropTopExtension: profileBackdropTopExtension, profileBackdropHold: profileBackdropHold, profileBackdropSideInset: profileBackdropSideInset)
                 let sectionFrame = CGRect(origin: CGPoint(x: insets.left, y: contentHeight), size: CGSize(width: sectionWidth, height: sectionHeight))
                 if additive {
                     transition.updateFrameAdditive(node: sectionNode, frame: sectionFrame)
