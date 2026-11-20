@@ -5882,38 +5882,19 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                             // and shading are included). Until the sample arrives, the analytic
                             // fallback is used: the main colour for profile colours and the
                             // outer colour for gift covers.
-                            let analyticColor: UIColor
-                            switch NetGramFeatures.integer("BackdropColorSource") {
-                            case 1:
-                                analyticColor = coverColors.0
-                            case 2:
-                                analyticColor = coverColors.1
-                            default:
-                                analyticColor = isGiftCover ? coverColors.1 : coverColors.0
-                            }
+                            let analyticColor = isGiftCover ? coverColors.1 : coverColors.0
                             let backdropColor: UIColor
-                            if hasCoverBand, let sampledColor = self.profileBackdropCoverEdgeColor, NetGramFeatures.integer("BackdropColorSource") == 0 {
+                            if hasCoverBand, let sampledColor = self.profileBackdropCoverEdgeColor {
                                 backdropColor = sampledColor
                             } else {
                                 backdropColor = analyticColor
                             }
                             let hold: CGFloat = hasCoverBand ? 220.0 : 0.0
-                            let glassAlphas: [CGFloat] = [0.08, 0.18, 0.30]
-                            let glassAlpha = glassAlphas[max(0, min(2, NetGramFeatures.integer("GlassDensity")))]
-                            switch NetGramFeatures.integer("GlassTintStyle") {
-                            case 1:
-                                glassTintColor = UIColor(white: 0.0, alpha: glassAlpha)
-                            case 2:
-                                glassTintColor = backdropColor.withAlphaComponent(glassAlpha)
-                            default:
-                                glassTintColor = UIColor(white: 1.0, alpha: glassAlpha)
-                            }
+                            glassTintColor = UIColor(white: 1.0, alpha: 0.12)
                             profileBackdropColor = backdropColor
-                            let topGaps: [CGFloat] = [0.0, 12.0, 24.0]
-                            profileBackdropTopExtension = (sectionSpacing + 12.0) + topGaps[max(0, min(2, NetGramFeatures.integer("BackdropTopGap")))] + hold
+                            profileBackdropTopExtension = (sectionSpacing + 12.0) + hold
                             profileBackdropHold = hold
-                            // 0 — the tint spans the full display width, 1 — only behind the card.
-                            profileBackdropSideInset = NetGramFeatures.integer("BackdropWidth") == 1 ? 0.0 : insets.left
+                            profileBackdropSideInset = insets.left
                         }
                     }
                 }

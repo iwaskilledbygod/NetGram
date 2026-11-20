@@ -1422,7 +1422,6 @@ public final class ChatTitleComponent: Component {
                 subtitleNode.isUserInteractionEnabled = false
                 self.contentContainer.addSubview(subtitleNode.view)
             }
-            subtitleNode.view.isHidden = NetGramFeatures.enabled("HideChatSubtitle")
             
             var titleLeftIconsWidth: CGFloat = 0.0
             if let leftIconSize {
@@ -1453,7 +1452,7 @@ public final class ChatTitleComponent: Component {
             let titleSize = self.title.update(
                 transition: transition,
                 component: AnyComponent(AnimatedTextComponent(
-                    font: Font.semibold([17.0, 19.0, 21.0][max(0, min(2, NetGramFeatures.integer("ChatTitleSize")))]),
+                    font: Font.semibold(17.0),
                     color: component.theme.chat.inputPanel.panelControlColor,
                     items: titleSegments,
                     noDelay: false,
@@ -1669,27 +1668,6 @@ public final class ChatTitleComponent: Component {
                     transition.setFrame(view: self.contentContainer, frame: containerFrame)
                 }
                 self.contentContainer.layer.cornerRadius = 0.0
-            }
-
-            // NetGram: optional chat header element visibility.
-            self.contentContainer.isHidden = NetGramFeatures.enabled("HideChatHeaderContents")
-            if NetGramFeatures.enabled("HideChatTitle") {
-                self.title.view?.isHidden = true
-            }
-            if NetGramFeatures.enabled("HideChatVerifiedIcon") {
-                self.verifiedIcon?.view?.isHidden = true
-            }
-            if NetGramFeatures.enabled("HideChatCredibilityIcon") {
-                self.credibilityIcon?.view?.isHidden = true
-            }
-            if NetGramFeatures.enabled("HideChatStatusEmoji") {
-                self.statusIcon?.view?.isHidden = true
-            }
-            if NetGramFeatures.enabled("HideChatNetBadge") {
-                self.netBadgeView?.isHidden = true
-            }
-            if NetGramFeatures.enabled("HideChatLockIcon") {
-                self.leftIcon?.view?.isHidden = true
             }
 
             return CGSize(width: containerSize.width, height: availableSize.height)

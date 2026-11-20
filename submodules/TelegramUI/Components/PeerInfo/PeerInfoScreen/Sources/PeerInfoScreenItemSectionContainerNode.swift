@@ -169,34 +169,12 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
         transition.updateFrame(node: self.bottomSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundHeight), size: CGSize(width: width, height: UIScreenPixel)))
 
         if let glassBackgroundView = self.glassBackgroundView {
-            let cardRadii: [CGFloat] = [20.0, 26.0, 32.0]
-            let cardRadius: CGFloat = cardRadii[max(0, min(2, NetGramFeatures.integer("CardRadius")))]
             let glassFrame = CGRect(origin: CGPoint(x: 0.0, y: contentWithBackgroundOffset), size: CGSize(width: width, height: max(0.0, contentWithBackgroundHeight - contentWithBackgroundOffset)))
             glassBackgroundView.frame = glassFrame
             let componentTransition = ComponentTransition(transition)
-            componentTransition.setCornerRadius(layer: glassBackgroundView.layer, cornerRadius: cardRadius)
+            componentTransition.setCornerRadius(layer: glassBackgroundView.layer, cornerRadius: 20.0)
             let dark = presentationData.theme.overallDarkAppearance
-            let glassInnerGlow = NetGramFeatures.enabled("GlassInnerGlow") ? UIColor(white: 1.0, alpha: dark ? 0.22 : 0.35) : nil
-            let innerInsets: [CGFloat] = [3.0, 6.0, 10.0]
-            glassBackgroundView.update(size: glassFrame.size, cornerRadius: cardRadius, isDark: dark, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: glassTintColor ?? UIColor(white: 0.5, alpha: 1.0)), innerColor: glassInnerGlow, innerInset: innerInsets[max(0, min(2, NetGramFeatures.integer("CardInnerPadding")))]), transition: componentTransition)
-            if NetGramFeatures.enabled("CardShadow") {
-                glassBackgroundView.layer.shadowColor = UIColor.black.cgColor
-                glassBackgroundView.layer.shadowOpacity = 0.25
-                glassBackgroundView.layer.shadowRadius = 14.0
-                glassBackgroundView.layer.shadowOffset = CGSize(width: 0.0, height: 6.0)
-                glassBackgroundView.layer.shadowPath = UIBezierPath(roundedRect: CGRect(origin: CGPoint(), size: glassFrame.size), cornerRadius: cardRadius).cgPath
-            } else {
-                glassBackgroundView.layer.shadowColor = nil
-                glassBackgroundView.layer.shadowOpacity = 0.0
-                glassBackgroundView.layer.shadowPath = nil
-            }
-            if NetGramFeatures.enabled("CardBorder") {
-                glassBackgroundView.layer.borderWidth = 0.5
-                glassBackgroundView.layer.borderColor = presentationData.theme.list.itemBlocksSeparatorColor.cgColor
-            } else {
-                glassBackgroundView.layer.borderWidth = 0.0
-                glassBackgroundView.layer.borderColor = nil
-            }
+            glassBackgroundView.update(size: glassFrame.size, cornerRadius: 20.0, isDark: dark, tintColor: GlassBackgroundView.TintColor(kind: .custom(style: .default, color: glassTintColor ?? UIColor(white: 0.5, alpha: 1.0)), innerColor: nil, innerInset: 3.0), transition: componentTransition)
             // Clip the items to the rounded card shape, so square item backgrounds and the
             // background-coloured corner caps never leak past the glass edges onto the
             // coloured backdrop. Only applied when the card starts at the top of the section.
@@ -211,7 +189,7 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
                     self.itemContainerNode.layer.mask = maskLayer
                 }
                 maskLayer.frame = self.itemContainerNode.bounds
-                maskLayer.path = UIBezierPath(roundedRect: glassFrame, cornerRadius: cardRadius).cgPath
+                maskLayer.path = UIBezierPath(roundedRect: glassFrame, cornerRadius: 20.0).cgPath
             } else if self.cardMaskLayer != nil {
                 self.cardMaskLayer?.removeFromSuperlayer()
                 self.cardMaskLayer = nil
@@ -227,34 +205,18 @@ final class PeerInfoScreenItemSectionContainerNode: ASDisplayNode {
             // The extension covers the gap between the header band and this section plus an
             // overlap that stays hidden behind the band; the side inset spans the full display
             // width so no light strips are left at the screen edges.
-            let backdropLength: CGFloat
-            switch max(0, min(2, NetGramFeatures.integer("BackdropLength"))) {
-            case 1:
-                // A longer transition that reaches past the bottom of the card.
-                backdropLength = cardHeight + 48.0
-            case 2:
-                // A compact transition that dissolves above the middle of the card.
-                backdropLength = cardHeight * 0.55
-            default:
-                // The colour fades out by the bottom of the card.
-                backdropLength = cardHeight
-            }
             let backdropFrame = CGRect(
                 x: -profileBackdropSideInset,
                 y: contentWithBackgroundOffset - profileBackdropTopExtension,
                 width: width + profileBackdropSideInset * 2.0,
-                height: profileBackdropTopExtension + max(0.0, backdropLength)
+                height: profileBackdropTopExtension + cardHeight
             )
             profileBackdropView.frame = backdropFrame
             profileBackdropView.update(
                 size: backdropFrame.size,
                 color: profileBackdropColor,
                 backgroundColor: presentationData.theme.list.blocksBackgroundColor,
-                hold: profileBackdropHold,
-                fadeStyle: max(0, min(2, NetGramFeatures.integer("BackdropFadeStyle"))),
-                strength: max(0, min(2, NetGramFeatures.integer("BackdropStrength"))),
-                direction: max(0, min(2, NetGramFeatures.integer("BackdropDirection"))),
-                centerGlow: NetGramFeatures.enabled("BackdropCenterGlow")
+                hold: profileBackdropHold
             )
         }
         

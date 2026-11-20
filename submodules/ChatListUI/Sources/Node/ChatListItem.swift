@@ -5759,8 +5759,6 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     }
                     
                     strongSelf.updateLayout(size: CGSize(width: layout.contentSize.width, height: itemHeight), leftInset: params.leftInset, rightInset: params.rightInset)
-
-                    strongSelf.applyNetGramRowOverrides(isMuted: isMuted)
                     
                     if item.editing {
                         strongSelf.setRevealOptions((left: [], right: []), enableAnimations: item.context.sharedContext.energyUsageSettings.fullTranslucency)
@@ -6164,86 +6162,6 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
         return false
     }
     
-    /// NetGram: optional row element visibility, applied after the standard row layout.
-    /// Kept in a dedicated method: the layout closure above is already at the Swift
-    /// type-checker's complexity limit.
-    func applyNetGramRowOverrides(isMuted: Bool) {
-        if NetGramFeatures.enabled("HideListDate") {
-            self.dateNode.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListDateDisclosure") {
-            self.dateDisclosureIconView?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListStatusIcons") {
-            self.dateStatusIconNode?.isHidden = true
-            self.pinnedIconNode.isHidden = true
-            self.secretIconNode?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListBadges") {
-            self.badgeNode.isHidden = true
-            self.avatarBadgeNode?.isHidden = true
-            self.avatarBadgeBackground?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListMentionBadges") {
-            self.mentionBadgeNode.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListOnlineDots") {
-            self.onlineNode.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListVerifiedIcons") {
-            self.verifiedIconView?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListCredibilityIcons") {
-            self.credibilityIconView?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListStatusEmoji") {
-            self.statusIconView?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListMuteIcons") {
-            self.mutedIconNode.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListNetBadges") {
-            self.netBadgeNode?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListTimerBadges") {
-            self.avatarTimerBadge?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListLiveBadges") {
-            self.avatarLiveBadge?.outline.isHidden = true
-            self.avatarLiveBadge?.foreground.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListMediaPreviews") {
-            for (_, previewNode) in self.mediaPreviewNodes {
-                previewNode.isHidden = true
-            }
-        }
-        if NetGramFeatures.enabled("HideListItemTags") {
-            self.itemTagList?.view?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListAvatars") {
-            self.avatarNode.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListTyping") {
-            self.inputActivitiesNode.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListDustEffect") {
-            self.dustNode?.isHidden = true
-        }
-        if NetGramFeatures.enabled("DimMutedChats") {
-            self.mainContentContainerNode.alpha = isMuted ? 0.55 : 1.0
-        }
-        if NetGramFeatures.enabled("HideListSeparators") {
-            self.separatorNode.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListStars") {
-            self.starView?.isHidden = true
-        }
-        if NetGramFeatures.enabled("HideListOpenAppButton") {
-            self.actionButtonTitleNode?.isHidden = true
-            self.actionButtonBackgroundView?.isHidden = true
-        }
-    }
-
     func flashHighlight() {
         if self.highlightedBackgroundNode.supernode == nil {
             self.insertSubnode(self.highlightedBackgroundNode, aboveSubnode: self.separatorNode)
